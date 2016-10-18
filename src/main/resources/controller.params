@@ -1,4 +1,3 @@
--baseURI=http://127.0.0.1:9998/
 -workers=16
 -timersInterval=100
 -delay=100

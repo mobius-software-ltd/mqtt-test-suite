@@ -47,8 +47,9 @@ public class Controller
 
 	public Controller() throws IOException
 	{
-		ClassLoader classLoader = getClass().getClassLoader();
-		File file = new File(classLoader.getResource("controller.params").getFile());
+		//		ClassLoader classLoader = getClass().getClassLoader();
+		//		File file = new File(classLoader.getResource("controller.params").getFile());
+		File file = new File(ControllerRunner.configFile);
 		byte[] encoded = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
 		String value = new String(encoded, "UTF-8");
 		String[] args = value.split("\\r?\\n");

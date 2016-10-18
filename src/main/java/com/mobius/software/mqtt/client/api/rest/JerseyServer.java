@@ -13,7 +13,7 @@ public class JerseyServer
 	public JerseyServer(URI uri)
 	{
 		final ResourceConfig rc = new ResourceConfig().packages("com.mobius.software.mqtt.client.controller");
-		server = GrizzlyHttpServerFactory.createHttpServer(uri, rc);
+		server = GrizzlyHttpServerFactory.createHttpServer(uri, rc);		
 	}    
 	
 	public void terminate()
