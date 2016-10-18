@@ -12,8 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import ua.mobius.media.server.utils.Text;
-
 import com.mobius.software.mqtt.client.api.data.Command;
 import com.mobius.software.mqtt.client.api.data.ConnectionContext;
 import com.mobius.software.mqtt.client.controller.PeriodicQueuedTasks;
@@ -22,7 +20,10 @@ import com.mobius.software.mqtt.client.controller.task.MessageResendTimer;
 import com.mobius.software.mqtt.client.controller.task.Timer;
 import com.mobius.software.mqtt.client.net.NetworkListener;
 import com.mobius.software.mqtt.client.util.CommandParser;
+import com.mobius.software.mqtt.parser.QoS;
+import com.mobius.software.mqtt.parser.Text;
 import com.mobius.software.mqtt.parser.Topic;
+import com.mobius.software.mqtt.parser.Will;
 import com.mobius.software.mqtt.parser.header.api.MQDevice;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.*;

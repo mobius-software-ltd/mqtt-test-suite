@@ -3,13 +3,12 @@ package com.mobius.software.mqtt.client.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import ua.mobius.media.server.utils.Text;
-
 import com.mobius.software.mqtt.client.api.data.Command;
 import com.mobius.software.mqtt.client.api.data.CommandType;
 import com.mobius.software.mqtt.client.api.data.Property;
 import com.mobius.software.mqtt.client.api.data.PropertyType;
 import com.mobius.software.mqtt.parser.QoS;
+import com.mobius.software.mqtt.parser.Text;
 import com.mobius.software.mqtt.parser.Topic;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Connect;
@@ -114,7 +113,7 @@ public class CommandParser
 			return new Disconnect();
 		case PUBLISH:
 			Text publishTopicName = new Text(propertyMap.get(PropertyType.TOPIC));
-			com.mobius.software.mqtt.parser.header.impl.QoS publishQos = com.mobius.software.mqtt.parser.header.impl.QoS.valueOf(Integer.valueOf(propertyMap.get(PropertyType.QOS)));
+			QoS publishQos = QoS.valueOf(Integer.valueOf(propertyMap.get(PropertyType.QOS)));
 			Topic publishTopic = new Topic(publishTopicName, publishQos);
 			Boolean retain = Boolean.parseBoolean(propertyMap.get(PropertyType.RETAIN));
 			Boolean dup = Boolean.parseBoolean(propertyMap.get(PropertyType.DUPLICATE));
@@ -122,7 +121,7 @@ public class CommandParser
 			return new Publish(publishTopic, content, retain, dup);
 		case SUBSCRIBE:
 			Text subscribeTopicName = new Text(propertyMap.get(PropertyType.TOPIC));
-			com.mobius.software.mqtt.parser.header.impl.QoS subscribeQos = com.mobius.software.mqtt.parser.header.impl.QoS.valueOf(Integer.valueOf(propertyMap.get(PropertyType.QOS)));
+			QoS subscribeQos = QoS.valueOf(Integer.valueOf(propertyMap.get(PropertyType.QOS)));
 			Topic subscribeTopic = new Topic(subscribeTopicName, subscribeQos);
 			return new Subscribe(new Topic[]
 			{ subscribeTopic });
