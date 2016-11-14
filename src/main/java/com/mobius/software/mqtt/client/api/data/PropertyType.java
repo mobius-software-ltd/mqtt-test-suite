@@ -1,5 +1,25 @@
 package com.mobius.software.mqtt.client.api.data;
 
+/**
+ * Mobius Software LTD
+ * Copyright 2015-2016, Mobius Software LTD
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum PropertyType
 {
-	IDENT_REGEX(1), USERNAME(2), PASSWORD(3), CLEAN_SESSION(4), KEEPALIVE(5), TOPIC(6), QOS(7), RETAIN(8), DUPLICATE(9);
+	USERNAME(1), PASSWORD(2), CLEAN_SESSION(3), KEEPALIVE(4), TOPIC(5), QOS(6), RETAIN(7), DUPLICATE(8), COUNT(9), RESEND_TIME(10), IDENT_REGEX(11), IDENT_START(12);
 
 	private static final Map<Integer, PropertyType> intToTypeMap = new HashMap<Integer, PropertyType>();
 	private static final Map<String, PropertyType> strToTypeMap = new HashMap<String, PropertyType>();

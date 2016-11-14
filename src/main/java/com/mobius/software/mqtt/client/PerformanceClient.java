@@ -1,5 +1,25 @@
 package com.mobius.software.mqtt.client;
 
+/**
+ * Mobius Software LTD
+ * Copyright 2015-2016, Mobius Software LTD
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 import io.netty.channel.ChannelFuture;
 
 import java.net.SocketAddress;
@@ -18,6 +38,7 @@ import com.mobius.software.mqtt.client.controller.PeriodicQueuedTasks;
 import com.mobius.software.mqtt.client.controller.ScenarioOrchestrator;
 import com.mobius.software.mqtt.client.controller.task.MessageResendTimer;
 import com.mobius.software.mqtt.client.controller.task.Timer;
+import com.mobius.software.mqtt.client.net.ConnectionListener;
 import com.mobius.software.mqtt.client.net.NetworkListener;
 import com.mobius.software.mqtt.client.util.CommandParser;
 import com.mobius.software.mqtt.parser.QoS;
@@ -37,32 +58,29 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	private ConcurrentLinkedQueue<Command> commands = new ConcurrentLinkedQueue<>();
 	private AtomicReference<Command> pendingCommand = new AtomicReference<>();
 	private AtomicReference<ChannelFuture> channelHandler = new AtomicReference<ChannelFuture>();
-	private AtomicLong currDelay = new AtomicLong();
 
 	private ConcurrentHashMap<Text, QoS> subscriptions = new ConcurrentHashMap<>();
 	private ConcurrentSkipListSet<Integer> pendingIncomingIdentifiers = new ConcurrentSkipListSet<>();
 	private TimersMap timers;
-	private AtomicLong timestamp = new AtomicLong(System.currentTimeMillis());
+	private AtomicLong timestamp;
 	private ScenarioOrchestrator orchestrator;
 	private Integer initialDelay;
+	private Long minPingInterval;
 
 	private boolean continueOnError;
 	private IdentityReport report = new IdentityReport();
 
-	public PerformanceClient(PeriodicQueuedTasks<Timer> scheduler, NetworkListener listener, List<Command> commands, SocketAddress serverAddress, Long resendInterval, boolean continueOnError, ScenarioOrchestrator orchestrator, Integer initialDelay)
+	public PerformanceClient(PeriodicQueuedTasks<Timer> scheduler, NetworkListener listener, List<Command> commands, SocketAddress serverAddress, Long resendInterval, Long minPingInterval, boolean continueOnError, ScenarioOrchestrator orchestrator, Integer initialDelay)
 	{
 		this.ctx = new ConnectionContext(serverAddress, resendInterval);
 		this.listener = listener;
-		this.commands.addAll(commands);
+		this.commands = CommandParser.retrieveCommands(commands);
 		this.timers = new TimersMap(ctx, scheduler, listener, report);
 		this.continueOnError = continueOnError;
 		this.orchestrator = orchestrator;
 		this.initialDelay = initialDelay;
-	}
-
-	public Long getTimestamp()
-	{
-		return timestamp.get();
+		this.minPingInterval = minPingInterval;
+		this.timestamp = new AtomicLong(System.currentTimeMillis() + initialDelay);
 	}
 
 	@Override
@@ -78,8 +96,13 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 					ChannelFuture future = channelHandler.get();
 					if (future.isDone())
 					{
-						ctx.updateLocalAddress(listener.finishConnection(future, this));
-						status.set(true);						
+						if (future.isSuccess())
+						{
+							ctx.updateLocalAddress(listener.finishConnection(future, this));
+							status.set(true);
+						}
+						else
+							report.reportError("CONNECTION", "failed to establish TCP connection");
 					}
 				}
 				else
@@ -89,7 +112,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 				return true;
 			}
 			else
-			{				
+			{
 				Command nextCommand = commands.poll();
 				if (nextCommand != null)
 				{
@@ -103,7 +126,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 						}
 					}
 
-					MQMessage message = CommandParser.toMessage(nextCommand);
+					MQMessage message = CommandParser.toMessage(nextCommand, ctx.remoteAddress().toString());
 					switch (message.getType())
 					{
 					case DISCONNECT:
@@ -143,9 +166,9 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 
 					Command next = commands.peek();
 					if (next != null)
-						currDelay.set(next.getSendTime());
+						timestamp.addAndGet(next.getSendTime());
 					else
-						currDelay.set((System.currentTimeMillis() - timestamp.get()) + initialDelay);
+						timestamp.set(System.currentTimeMillis() + initialDelay);
 				}
 				else
 				{
@@ -166,12 +189,18 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	@Override
 	public Long getRealTimestamp()
 	{
-		return timestamp.get() + currDelay.get();
+		return timestamp.get();
+	}
+
+	public Command checkNext()
+	{
+		return commands.peek();
 	}
 
 	@Override
 	public void processConnack(ConnackCode code, boolean sessionPresent)
 	{
+		orchestrator.notifyOnStart();
 		Timer timer = timers.retrieveConnect();
 		if (timer == null)
 			throw new MQTTException(MessageType.CONNACK, "invalid packet identifier");
@@ -184,7 +213,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 		{
 		case ACCEPTED:
 			pendingCommand.set(null);
-			timers.restartKeepalive();
+			timers.restartPing();
 			break;
 		case BAD_USER_OR_PASS:
 		case IDENTIFIER_REJECTED:
@@ -204,7 +233,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 		if (timer == null || timer.retrieveMessage().getType() != MessageType.SUBSCRIBE)
 			throw new MQTTException(MessageType.SUBACK, "invalid packet identifier");
 
-		timers.restartKeepalive();
+		timers.restartPing();
 
 		Subscribe subscribe = (Subscribe) timer.retrieveMessage();
 		Topic[] topics = subscribe.getTopics();
@@ -231,7 +260,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 		if (timer == null || timer.retrieveMessage().getType() != MessageType.UNSUBSCRIBE)
 			throw new MQTTException(MessageType.UNSUBACK, "invalid packet identifier");
 
-		timers.restartKeepalive();
+		timers.restartPing();
 
 		Unsubscribe unsub = (Unsubscribe) timer.retrieveMessage();
 		subscriptions.keySet().removeAll(Arrays.asList(unsub.getTopics()));
@@ -267,7 +296,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 		if (timer == null || timer.retrieveMessage().getType() != MessageType.PUBLISH)
 			throw new MQTTException(MessageType.PUBACK, "invalid packet identifier");
 
-		timers.restartKeepalive();
+		timers.restartPing();
 		timers.remove(packetID);
 		pendingCommand.set(null);
 	}
@@ -308,7 +337,11 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	@Override
 	public void processPingresp()
 	{
-		timers.restartKeepalive();
+		Command nextCommand = checkNext();
+		if (nextCommand != null && getRealTimestamp() > (System.currentTimeMillis() + minPingInterval + ctx.getKeepalive() * 1000))
+			timers.restartPing();
+		else
+			timers.stopPing();
 	}
 
 	@Override
@@ -368,7 +401,12 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	@Override
 	public void stop()
 	{
-		//
+		if (ctx.localAddress() != null)
+			listener.close(ctx.localAddress());
+
+		timers.stopAllTimers();
+		pendingIncomingIdentifiers.clear();
+		subscriptions.clear();
 	}
 
 	public IdentityReport getReport()

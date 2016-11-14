@@ -1,10 +1,30 @@
 package com.mobius.software.mqtt.client.controller;
 
+/**
+ * Mobius Software LTD
+ * Copyright 2015-2016, Mobius Software LTD
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.mobius.software.mqtt.client.ClientReport;
+import com.mobius.software.mqtt.client.api.data.ClientReport;
 import com.mobius.software.mqtt.client.api.json.GenericJsonResponse;
 
 @SuppressWarnings("serial")
@@ -21,9 +41,9 @@ public class Report extends GenericJsonResponse
 
 	}
 
-	public Report(String status, String message, Long messagesSent, Long messagesReceived, List<ClientReport> reports, Integer completedCount)
+	public Report(String status, Long messagesSent, Long messagesReceived, List<ClientReport> reports, Integer completedCount)
 	{
-		super(status, message);
+		super(status, null);
 		this.messagesSent = messagesSent;
 		this.messagesReceived = messagesReceived;
 		this.reports = reports;

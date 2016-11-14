@@ -1,4 +1,4 @@
-package com.mobius.software.mqtt.client;
+package com.mobius.software.mqtt.client.api.data;
 
 /**
  * Mobius Software LTD
@@ -20,22 +20,52 @@ package com.mobius.software.mqtt.client;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
-
-public class MQTTException extends RuntimeException
+public class ErrorReport
 {
-	private static final long serialVersionUID = 1L;
+	private String type;
+	private String message;
+	private Long timestamp;
 
-	private MessageType type;
-
-	public MQTTException(MessageType type, String message)
+	public ErrorReport()
 	{
-		super(message);
-		this.type = type;
+
 	}
 
-	public MessageType getType()
+	public ErrorReport(String type, String message, Long timestamp)
+	{
+		this.type = type;
+		this.message = message;
+		this.timestamp = timestamp;
+	}
+
+	public String getType()
 	{
 		return type;
 	}
+
+	public void setType(String type)
+	{
+		this.type = type;
+	}
+
+	public String getMessage()
+	{
+		return message;
+	}
+
+	public void setMessage(String message)
+	{
+		this.message = message;
+	}
+
+	public Long getTimestamp()
+	{
+		return timestamp;
+	}
+
+	public void setTimestamp(Long timestamp)
+	{
+		this.timestamp = timestamp;
+	}
+
 }

@@ -1,4 +1,4 @@
-package com.mobius.software.mqtt.client;
+package com.mobius.software.mqtt.client.api.data;
 
 /**
  * Mobius Software LTD
@@ -20,22 +20,51 @@ package com.mobius.software.mqtt.client;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
-
-public class MQTTException extends RuntimeException
+public class Counter
 {
-	private static final long serialVersionUID = 1L;
+	private CommandType command;
+	private Integer count;
+	private Boolean isIncoming;
 
-	private MessageType type;
-
-	public MQTTException(MessageType type, String message)
+	public Counter()
 	{
-		super(message);
-		this.type = type;
+
 	}
 
-	public MessageType getType()
+	public Counter(CommandType command, Integer count, Boolean isIncoming)
 	{
-		return type;
+		this.command = command;
+		this.count = count;
+		this.isIncoming = isIncoming;
+	}
+
+	public CommandType getCommand()
+	{
+		return command;
+	}
+
+	public void setCommand(CommandType command)
+	{
+		this.command = command;
+	}
+
+	public Integer getCount()
+	{
+		return count;
+	}
+
+	public void setCount(Integer count)
+	{
+		this.count = count;
+	}
+
+	public Boolean getIsIncoming()
+	{
+		return isIncoming;
+	}
+
+	public void setIsIncoming(Boolean isIncoming)
+	{
+		this.isIncoming = isIncoming;
 	}
 }

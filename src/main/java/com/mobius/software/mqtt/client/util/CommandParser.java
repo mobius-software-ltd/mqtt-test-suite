@@ -1,7 +1,29 @@
 package com.mobius.software.mqtt.client.util;
 
+/**
+ * Mobius Software LTD
+ * Copyright 2015-2016, Mobius Software LTD
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.mobius.software.mqtt.client.api.data.Command;
 import com.mobius.software.mqtt.client.api.data.CommandType;
@@ -26,8 +48,10 @@ public class CommandParser
 
 		Map<PropertyType, String> propertyMap = new HashMap<>();
 		if (command.getType() != CommandType.DISCONNECT)
+		{
 			for (Property property : command.getCommandProperties())
 				propertyMap.put(property.getType(), property.getValue());
+		}
 		try
 		{
 			switch (command.getType())
@@ -35,6 +59,9 @@ public class CommandParser
 			case CONNECT:
 				String identRegex = propertyMap.remove(PropertyType.IDENT_REGEX);
 				if (identRegex == null || !IdentifierParser.validate(identRegex))
+					return false;
+				String identStart = propertyMap.remove(PropertyType.IDENT_START);
+				if (identStart == null || Integer.parseInt(identStart) < 0)
 					return false;
 				String username = propertyMap.remove(PropertyType.USERNAME);
 				if (username == null || username.isEmpty())
@@ -66,6 +93,12 @@ public class CommandParser
 				String duplicate = propertyMap.remove(PropertyType.DUPLICATE);
 				if (duplicate != null && !(duplicate.equals("true") || duplicate.equals("false")))
 					return false;
+				String count = propertyMap.remove(PropertyType.COUNT);
+				if (count == null || Integer.parseInt(count) < 0)
+					return false;
+				String resendTime = propertyMap.remove(PropertyType.RESEND_TIME);
+				if (resendTime == null || Integer.parseInt(resendTime) < 0)
+					return false;
 				return propertyMap.isEmpty();
 
 			case SUBSCRIBE:
@@ -93,7 +126,7 @@ public class CommandParser
 		}
 	}
 
-	public static MQMessage toMessage(Command command)
+	public static MQMessage toMessage(Command command, String serverHostname)
 	{
 		Map<PropertyType, String> propertyMap = new HashMap<>();
 		if (command.getType() != CommandType.DISCONNECT)
@@ -105,7 +138,7 @@ public class CommandParser
 		case CONNECT:
 			String username = propertyMap.get(PropertyType.USERNAME);
 			String password = propertyMap.get(PropertyType.PASSWORD);
-			String identifier = IdentifierParser.parseIdentifier(propertyMap.get(PropertyType.IDENT_REGEX), username);
+			String identifier = IdentifierParser.parseIdentifier(propertyMap.get(PropertyType.IDENT_REGEX), username, serverHostname, propertyMap.get(PropertyType.IDENT_START));
 			Boolean cleanSession = Boolean.parseBoolean(propertyMap.get(PropertyType.CLEAN_SESSION));
 			Integer keepalive = Integer.parseInt(propertyMap.get(PropertyType.KEEPALIVE));
 			return new Connect(username, password, identifier, cleanSession, keepalive, null);
@@ -132,5 +165,41 @@ public class CommandParser
 		default:
 			return null;
 		}
+	}
+
+	public static ConcurrentLinkedQueue<Command> retrieveCommands(List<Command> commands)
+	{
+		ConcurrentLinkedQueue<Command> queue = new ConcurrentLinkedQueue<>();
+		for (Command command : commands)
+		{
+			if (command.getType() == CommandType.PUBLISH)
+			{
+				Integer count = retrieveIntegerProperty(command, PropertyType.COUNT);
+				Integer resendTime = retrieveIntegerProperty(command, PropertyType.RESEND_TIME);
+				Long currSendTime = command.getSendTime();
+				for (int i = 1; i <= count; i++, currSendTime += resendTime)
+				{
+					Command publish = new Command(command.getType(), currSendTime, command.getCommandProperties());
+					queue.offer(publish);
+				}
+			}
+			else
+				queue.offer(command);
+		}
+		return queue;
+	}
+
+	private static Integer retrieveIntegerProperty(Command command, PropertyType type)
+	{
+		Integer value = null;
+		for (Property property : command.getCommandProperties())
+		{
+			if (property.getType() == type)
+			{
+				value = Integer.parseInt(property.getValue());
+				break;
+			}
+		}
+		return value;
 	}
 }

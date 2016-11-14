@@ -1,5 +1,25 @@
 package com.mobius.software.mqtt.client.controller;
 
+/**
+ * Mobius Software LTD
+ * Copyright 2015-2016, Mobius Software LTD
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -47,9 +67,18 @@ public class Controller
 
 	public Controller() throws IOException
 	{
-		//		ClassLoader classLoader = getClass().getClassLoader();
-		//		File file = new File(classLoader.getResource("controller.params").getFile());
-		File file = new File(ControllerRunner.configFile);
+		String path = "";
+		try
+		{
+			path = Controller.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+		}
+		catch (Exception ex)
+		{
+
+		}
+
+		File file = new File(path).getParentFile();
+		file = new File(file.getPath() + "/" + ControllerRunner.configFile);
 		byte[] encoded = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
 		String value = new String(encoded, "UTF-8");
 		String[] args = value.split("\\r?\\n");
@@ -78,11 +107,11 @@ public class Controller
 			for (Scenario scenario : json.getRequests())
 			{
 				List<PerformanceClient> clientList = new ArrayList<>();
-				ScenarioOrchestrator orchestrator = new ScenarioOrchestrator(scheduler, clientList, scenario.getThreshold(), config.getInitialDelay());
+				ScenarioOrchestrator orchestrator = new ScenarioOrchestrator(scheduler, clientList, scenario.getThreshold(), scenario.getStartThreshold(), config.getInitialDelay());
 				SocketAddress serverAddress = new InetSocketAddress(scenario.getProperties().getServerHostname(), scenario.getProperties().getServerPort());
 				for (int i = 0; i < scenario.getCount(); i++)
 				{
-					PerformanceClient client = new PerformanceClient(scheduler, listener, scenario.getCommands(), serverAddress, scenario.getProperties().getResendInterval(), scenario.getContinueOnError(), orchestrator, config.getInitialDelay());
+					PerformanceClient client = new PerformanceClient(scheduler, listener, scenario.getCommands(), serverAddress, scenario.getProperties().getResendInterval(), scenario.getProperties().getMinPingInterval(), scenario.getContinueOnError(), orchestrator, config.getInitialDelay());
 					clientList.add(client);
 				}
 

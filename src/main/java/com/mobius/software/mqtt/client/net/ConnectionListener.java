@@ -1,4 +1,4 @@
-package com.mobius.software.mqtt.client;
+package com.mobius.software.mqtt.client.net;
 
 /**
  * Mobius Software LTD
@@ -20,22 +20,13 @@ package com.mobius.software.mqtt.client;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
+import java.net.SocketAddress;
 
-public class MQTTException extends RuntimeException
+import com.mobius.software.mqtt.parser.header.api.MQMessage;
+
+public interface ConnectionListener
 {
-	private static final long serialVersionUID = 1L;
+	void packetReceived(SocketAddress address, MQMessage header);
 
-	private MessageType type;
-
-	public MQTTException(MessageType type, String message)
-	{
-		super(message);
-		this.type = type;
-	}
-
-	public MessageType getType()
-	{
-		return type;
-	}
+	void connectionDown(SocketAddress address);
 }
