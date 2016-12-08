@@ -24,8 +24,8 @@ import com.mobius.software.mqtt.client.IdentityReport;
 import com.mobius.software.mqtt.client.api.data.ConnectionContext;
 import com.mobius.software.mqtt.client.controller.PeriodicQueuedTasks;
 import com.mobius.software.mqtt.client.net.NetworkListener;
+import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
 
 public class MessageResendTimer implements Timer

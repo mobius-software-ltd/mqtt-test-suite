@@ -33,7 +33,7 @@ public class IdentifierParser
 
 	private static ConcurrentHashMap<String, AtomicInteger> identifiers = new ConcurrentHashMap<>();
 
-	public static String parseIdentifier(String regex, String username, String server, String startIdentifier)
+	public static String parseIdentifier(String regex, String username, String server, Integer startIdentifier)
 	{
 		StringBuilder sb = new StringBuilder();
 		List<String> segments = Arrays.asList(regex.split(REGEX_SEPARATOR));
@@ -42,9 +42,8 @@ public class IdentifierParser
 			segment.replaceAll(REGEX_SEPARATOR, "");
 			if (segment.equals(Template.IDENTITY.getTemplate()))
 			{
-				Integer start = Integer.parseInt(startIdentifier);
 				if (!identifiers.containsKey(regex))
-					identifiers.putIfAbsent(regex, new AtomicInteger(start));
+					identifiers.putIfAbsent(regex, new AtomicInteger(startIdentifier));
 				AtomicInteger currIdentifier = identifiers.get(regex);
 				String identityNumber = String.valueOf(currIdentifier.getAndIncrement());
 				sb.append(identityNumber).append(IDENTIFIER_SEPARATOR);

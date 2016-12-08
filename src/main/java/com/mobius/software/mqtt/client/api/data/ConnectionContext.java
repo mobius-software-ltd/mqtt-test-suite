@@ -20,6 +20,7 @@ package com.mobius.software.mqtt.client.api.data;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 public class ConnectionContext
@@ -32,7 +33,7 @@ public class ConnectionContext
 	private SocketAddress serverAddress;
 	private Long resendInterval;
 
-	public ConnectionContext(SocketAddress serverAddress, Long resendInterval)
+	public ConnectionContext(InetSocketAddress serverAddress, Long resendInterval)
 	{
 		this.serverAddress = serverAddress;
 		this.resendInterval = resendInterval;

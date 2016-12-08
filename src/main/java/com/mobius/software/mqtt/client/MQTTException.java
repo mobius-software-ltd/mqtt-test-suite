@@ -20,7 +20,7 @@ package com.mobius.software.mqtt.client;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
+import com.mobius.software.mqtt.parser.avps.MessageType;
 
 public class MQTTException extends RuntimeException
 {

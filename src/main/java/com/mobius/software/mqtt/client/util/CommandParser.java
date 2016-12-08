@@ -29,12 +29,12 @@ import com.mobius.software.mqtt.client.api.data.Command;
 import com.mobius.software.mqtt.client.api.data.CommandType;
 import com.mobius.software.mqtt.client.api.data.Property;
 import com.mobius.software.mqtt.client.api.data.PropertyType;
-import com.mobius.software.mqtt.parser.QoS;
-import com.mobius.software.mqtt.parser.Text;
-import com.mobius.software.mqtt.parser.Topic;
+import com.mobius.software.mqtt.parser.MQParser;
+import com.mobius.software.mqtt.parser.avps.QoS;
+import com.mobius.software.mqtt.parser.avps.Text;
+import com.mobius.software.mqtt.parser.avps.Topic;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Connect;
-import com.mobius.software.mqtt.parser.header.impl.Disconnect;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
 import com.mobius.software.mqtt.parser.header.impl.Subscribe;
 import com.mobius.software.mqtt.parser.header.impl.Unsubscribe;
@@ -57,12 +57,7 @@ public class CommandParser
 			switch (command.getType())
 			{
 			case CONNECT:
-				String identRegex = propertyMap.remove(PropertyType.IDENT_REGEX);
-				if (identRegex == null || !IdentifierParser.validate(identRegex))
-					return false;
-				String identStart = propertyMap.remove(PropertyType.IDENT_START);
-				if (identStart == null || Integer.parseInt(identStart) < 0)
-					return false;
+
 				String username = propertyMap.remove(PropertyType.USERNAME);
 				if (username == null || username.isEmpty())
 					return false;
@@ -126,7 +121,7 @@ public class CommandParser
 		}
 	}
 
-	public static MQMessage toMessage(Command command, String serverHostname)
+	public static MQMessage toMessage(Command command, String identRegex, Integer startIdent, String serverHostname)
 	{
 		Map<PropertyType, String> propertyMap = new HashMap<>();
 		if (command.getType() != CommandType.DISCONNECT)
@@ -138,12 +133,14 @@ public class CommandParser
 		case CONNECT:
 			String username = propertyMap.get(PropertyType.USERNAME);
 			String password = propertyMap.get(PropertyType.PASSWORD);
-			String identifier = IdentifierParser.parseIdentifier(propertyMap.get(PropertyType.IDENT_REGEX), username, serverHostname, propertyMap.get(PropertyType.IDENT_START));
+			String identifier = IdentifierParser.parseIdentifier(identRegex, username, serverHostname, startIdent);
 			Boolean cleanSession = Boolean.parseBoolean(propertyMap.get(PropertyType.CLEAN_SESSION));
 			Integer keepalive = Integer.parseInt(propertyMap.get(PropertyType.KEEPALIVE));
 			return new Connect(username, password, identifier, cleanSession, keepalive, null);
+
 		case DISCONNECT:
-			return new Disconnect();
+			return MQParser.DISCONNECT_MESSAGE;
+
 		case PUBLISH:
 			Text publishTopicName = new Text(propertyMap.get(PropertyType.TOPIC));
 			QoS publishQos = QoS.valueOf(Integer.valueOf(propertyMap.get(PropertyType.QOS)));
@@ -152,16 +149,19 @@ public class CommandParser
 			Boolean dup = Boolean.parseBoolean(propertyMap.get(PropertyType.DUPLICATE));
 			byte[] content = MessageGenerator.generateContent();
 			return new Publish(publishTopic, content, retain, dup);
+
 		case SUBSCRIBE:
 			Text subscribeTopicName = new Text(propertyMap.get(PropertyType.TOPIC));
 			QoS subscribeQos = QoS.valueOf(Integer.valueOf(propertyMap.get(PropertyType.QOS)));
 			Topic subscribeTopic = new Topic(subscribeTopicName, subscribeQos);
 			return new Subscribe(new Topic[]
 			{ subscribeTopic });
+
 		case UNSUBSCRIBE:
 			Text unsubscribeTopic = new Text(propertyMap.get(PropertyType.TOPIC));
 			return new Unsubscribe(new Text[]
 			{ unsubscribeTopic });
+
 		default:
 			return null;
 		}

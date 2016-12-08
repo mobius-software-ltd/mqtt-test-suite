@@ -42,8 +42,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.mobius.software.mqtt.client.MQTTException;
+import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
 
 public class TCPClient implements NetworkListener
 {

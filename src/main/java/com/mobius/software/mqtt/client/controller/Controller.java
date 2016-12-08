@@ -22,8 +22,6 @@ package com.mobius.software.mqtt.client.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -43,7 +41,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.mobius.software.mqtt.client.PerformanceClient;
+import com.mobius.software.mqtt.client.Client;
 import com.mobius.software.mqtt.client.api.data.Scenario;
 import com.mobius.software.mqtt.client.api.json.GenericJsonResponse;
 import com.mobius.software.mqtt.client.api.json.ResponseData;
@@ -106,12 +104,12 @@ public class Controller
 		{
 			for (Scenario scenario : json.getRequests())
 			{
-				List<PerformanceClient> clientList = new ArrayList<>();
-				ScenarioOrchestrator orchestrator = new ScenarioOrchestrator(scheduler, clientList, scenario.getThreshold(), scenario.getStartThreshold(), config.getInitialDelay());
-				SocketAddress serverAddress = new InetSocketAddress(scenario.getProperties().getServerHostname(), scenario.getProperties().getServerPort());
+				List<Client> clientList = new ArrayList<>();
+				OrchestratorProperties properties = OrchestratorProperties.fromScenarioProperties(scenario.getProperties(), scenario.getThreshold(), scenario.getStartThreshold(), scenario.getContinueOnError(), config.getInitialDelay());
+				ScenarioOrchestrator orchestrator = new ScenarioOrchestrator(properties, scheduler, clientList);
 				for (int i = 0; i < scenario.getCount(); i++)
 				{
-					PerformanceClient client = new PerformanceClient(scheduler, listener, scenario.getCommands(), serverAddress, scenario.getProperties().getResendInterval(), scenario.getProperties().getMinPingInterval(), scenario.getContinueOnError(), orchestrator, config.getInitialDelay());
+					Client client = new Client(orchestrator, listener, scenario.getCommands());
 					clientList.add(client);
 				}
 

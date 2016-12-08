@@ -25,7 +25,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
+import com.mobius.software.mqtt.parser.avps.MessageType;
 
 public enum CommandType
 {

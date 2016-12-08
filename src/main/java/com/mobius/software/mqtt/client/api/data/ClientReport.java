@@ -26,7 +26,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mobius.software.mqtt.client.IdentityReport;
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
+import com.mobius.software.mqtt.parser.avps.MessageType;
 
 public class ClientReport
 {

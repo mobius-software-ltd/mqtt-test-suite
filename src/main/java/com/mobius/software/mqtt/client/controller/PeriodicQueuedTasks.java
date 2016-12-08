@@ -32,11 +32,11 @@ public class PeriodicQueuedTasks<T extends Timer>
 {
 	private ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>> queues = new ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>>();
 	private LinkedBlockingQueue<T> mainQueue;
-	private ConcurrentLinkedQueue<T> passAwayQueue=new ConcurrentLinkedQueue<T>();
-	
+	private ConcurrentLinkedQueue<T> passAwayQueue = new ConcurrentLinkedQueue<T>();
+
 	private long period;
 	private AtomicLong previousRun = new AtomicLong(0);
-	
+
 	public PeriodicQueuedTasks(long period, LinkedBlockingQueue<T> mainQueue)
 	{
 		this.mainQueue = mainQueue;
@@ -52,30 +52,31 @@ public class PeriodicQueuedTasks<T extends Timer>
 	{
 		return previousRun.get();
 	}
+
 	public void store(long timestamp, T task)
 	{
 		Long periodTime = timestamp - timestamp % period;
 		ConcurrentLinkedQueue<T> queue;
-		if(previousRun.get()>=periodTime)
+		if (previousRun.get() >= periodTime)
 		{
 			queue = passAwayQueue;
 			queue.offer(task);
 		}
 		else
 		{
-			queue = queues.get(periodTime);		
+			queue = queues.get(periodTime);
 			if (queue == null)
 			{
 				queue = new ConcurrentLinkedQueue<T>();
 				ConcurrentLinkedQueue<T> oldQueue = queues.putIfAbsent(periodTime, queue);
 				if (oldQueue != null)
-					queue = oldQueue;			
+					queue = oldQueue;
 			}
-			
-			if(previousRun.get()>=periodTime)
+
+			if (previousRun.get() >= periodTime)
 			{
 				passAwayQueue.offer(task);
-				queues.remove(periodTime);		
+				queues.remove(periodTime);
 			}
 			else
 				queue.offer(task);
@@ -84,44 +85,44 @@ public class PeriodicQueuedTasks<T extends Timer>
 
 	public void executePreviousPool(long timestamp)
 	{
-		Long originalTime=(timestamp - timestamp % period - period);
-		Long periodTime=originalTime;
-		
-		ConcurrentLinkedQueue<T> queue=null;
+		Long originalTime = (timestamp - timestamp % period - period);
+		Long periodTime = originalTime;
+
+		ConcurrentLinkedQueue<T> queue = null;
 		T current;
-		
+
 		do
 		{
 			if (!previousRun.compareAndSet(0, periodTime))
 				periodTime = previousRun.addAndGet(period);
-	
+
 			queue = queues.remove(periodTime);
 			if (queue != null)
 			{
 				while ((current = queue.poll()) != null)
-				{				
+				{
 					if (current.getRealTimestamp() < (periodTime + period))
 					{
 						if (current instanceof MessageResendTimer)
 							current.execute();
 						else
 							mainQueue.offer(current);
-					}				
+					}
 				}
 			}
-		}				
-		while(periodTime.longValue()<originalTime.longValue());
-		
+		}
+		while (periodTime.longValue() < originalTime.longValue());
+
 		while ((current = passAwayQueue.poll()) != null)
-		{				
+		{
 			if (current.getRealTimestamp() < (periodTime + period))
 			{
 				if (current instanceof MessageResendTimer)
 					current.execute();
 				else
 					mainQueue.offer(current);
-			}			
-		}				
+			}
+		}
 	}
 
 	public ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>> getQueues()

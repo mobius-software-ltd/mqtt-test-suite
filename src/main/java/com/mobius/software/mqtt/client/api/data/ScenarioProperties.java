@@ -20,29 +20,33 @@ package com.mobius.software.mqtt.client.api.data;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-public class ConnectionProperties
+public class ScenarioProperties
 {
 	private String serverHostname;
 	private Integer serverPort;
 	private Long resendInterval;
 	private Long minPingInterval;
+	private String identifierRegex;
+	private Integer startIdentifier;
 
-	public ConnectionProperties()
+	public ScenarioProperties()
 	{
 
 	}
 
-	public ConnectionProperties(String serverHostname, Integer serverPort, Long resendInterval, Long minPingInterval)
+	public ScenarioProperties(String serverHostname, Integer serverPort, Long resendInterval, Long minPingInterval, String identifierRegex, Integer startIdentifer)
 	{
 		this.serverHostname = serverHostname;
 		this.serverPort = serverPort;
 		this.resendInterval = resendInterval;
 		this.minPingInterval = minPingInterval;
+		this.identifierRegex = identifierRegex;
+		this.startIdentifier = startIdentifer;
 	}
 
 	public boolean validate()
 	{
-		return serverHostname != null && serverPort != null && resendInterval != null && minPingInterval != null;
+		return serverHostname != null && serverPort != null && resendInterval != null && minPingInterval != null && identifierRegex != null && startIdentifier != null;
 	}
 
 	public String getServerHostname()
@@ -83,5 +87,25 @@ public class ConnectionProperties
 	public void setMinPingInterval(Long minPingInterval)
 	{
 		this.minPingInterval = minPingInterval;
+	}
+
+	public String getIdentifierRegex()
+	{
+		return identifierRegex;
+	}
+
+	public void setIdentifierRegex(String identifierRegex)
+	{
+		this.identifierRegex = identifierRegex;
+	}
+
+	public Integer getStartIdentifier()
+	{
+		return startIdentifier;
+	}
+
+	public void setStartIdentifier(Integer startIdentifier)
+	{
+		this.startIdentifier = startIdentifier;
 	}
 }

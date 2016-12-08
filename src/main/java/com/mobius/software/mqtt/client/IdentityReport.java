@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mobius.software.mqtt.client.api.data.ErrorReport;
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
+import com.mobius.software.mqtt.parser.avps.MessageType;
 
 public class IdentityReport
 {

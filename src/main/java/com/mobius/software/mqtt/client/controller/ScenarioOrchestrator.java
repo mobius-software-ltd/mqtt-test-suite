@@ -25,44 +25,40 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.mobius.software.mqtt.client.Client;
 import com.mobius.software.mqtt.client.IdentityReport;
-import com.mobius.software.mqtt.client.PerformanceClient;
 import com.mobius.software.mqtt.client.api.data.ClientReport;
 import com.mobius.software.mqtt.client.api.json.ResponseData;
 import com.mobius.software.mqtt.client.controller.task.Timer;
-import com.mobius.software.mqtt.parser.header.impl.MessageType;
+import com.mobius.software.mqtt.parser.avps.MessageType;
 
 public class ScenarioOrchestrator
 {
+	private OrchestratorProperties properties;
 	private PeriodicQueuedTasks<Timer> scheduler;
-	private List<PerformanceClient> clientList;
-	private Integer threshold;
-	private Integer startThreshold;
-	private Integer delay;
+	private List<Client> clientList;
 
 	private AtomicInteger startingCount = new AtomicInteger(0);
 	private AtomicInteger pendingCount = new AtomicInteger(0);
 	private AtomicInteger completedCount = new AtomicInteger(0);
-	private ConcurrentLinkedQueue<PerformanceClient> pendingQueue = new ConcurrentLinkedQueue<>();
+	private ConcurrentLinkedQueue<Client> pendingQueue = new ConcurrentLinkedQueue<>();
 
-	public ScenarioOrchestrator(PeriodicQueuedTasks<Timer> scheduler, List<PerformanceClient> clientList, Integer threshold, Integer startThreshold, Integer delay)
+	public ScenarioOrchestrator(OrchestratorProperties properties, PeriodicQueuedTasks<Timer> scheduler, List<Client> clientList)
 	{
+		this.properties = properties;
 		this.scheduler = scheduler;
 		this.clientList = clientList;
-		this.threshold = threshold;
-		this.startThreshold = startThreshold;
-		this.delay = delay;
 	}
 
 	public void start()
 	{
-		for (PerformanceClient client : clientList)
+		for (Client client : clientList)
 		{
-			if (startingCount.get() < startThreshold)
+			if (startingCount.get() < properties.getStartThreashold())
 			{
 				pendingCount.incrementAndGet();
 				startingCount.incrementAndGet();
-				scheduler.store(System.currentTimeMillis() + delay, client);
+				scheduler.store(System.currentTimeMillis() + properties.getInitialDelay(), client);
 			}
 			else
 				pendingQueue.offer(client);
@@ -71,16 +67,16 @@ public class ScenarioOrchestrator
 
 	public void notifyOnStart()
 	{
-		if (startingCount.decrementAndGet() < startThreshold)
+		if (startingCount.decrementAndGet() < properties.getStartThreashold())
 		{
-			if (pendingCount.get() < threshold)
+			if (pendingCount.get() < properties.getThreashold())
 			{
-				PerformanceClient newClient = pendingQueue.poll();
+				Client newClient = pendingQueue.poll();
 				if (newClient != null)
 				{
 					pendingCount.incrementAndGet();
 					startingCount.incrementAndGet();
-					scheduler.store(System.currentTimeMillis() + delay, newClient);
+					scheduler.store(System.currentTimeMillis() + properties.getInitialDelay(), newClient);
 				}
 			}
 		}
@@ -89,16 +85,16 @@ public class ScenarioOrchestrator
 	public void notifyOnComplete()
 	{
 		completedCount.incrementAndGet();
-		if (pendingCount.decrementAndGet() < threshold)
+		if (pendingCount.decrementAndGet() < properties.getThreashold())
 		{
-			if (startingCount.get() < startThreshold)
+			if (startingCount.get() < properties.getStartThreashold())
 			{
-				PerformanceClient newClient = pendingQueue.poll();
+				Client newClient = pendingQueue.poll();
 				if (newClient != null)
 				{
 					pendingCount.incrementAndGet();
 					startingCount.incrementAndGet();
-					scheduler.store(System.currentTimeMillis() + delay, newClient);
+					scheduler.store(System.currentTimeMillis() + properties.getInitialDelay(), newClient);
 				}
 			}
 		}
@@ -106,7 +102,7 @@ public class ScenarioOrchestrator
 
 	public void terminate()
 	{
-		for (PerformanceClient client : clientList)
+		for (Client client : clientList)
 			client.stop();
 	}
 
@@ -114,7 +110,7 @@ public class ScenarioOrchestrator
 	{
 		long messagesSent = 0, messagesReceived = 0;
 		List<ClientReport> reports = new ArrayList<>();
-		for (PerformanceClient client : clientList)
+		for (Client client : clientList)
 		{
 			IdentityReport identityReport = client.getReport();
 			AtomicInteger publishInCounter = identityReport.getOutPacketCounters().get(MessageType.PUBLISH);
@@ -126,5 +122,15 @@ public class ScenarioOrchestrator
 			reports.add(ClientReport.valueOf(client.getReport()));
 		}
 		return new Report(ResponseData.SUCCESS, messagesSent, messagesReceived, reports, completedCount.get());
+	}
+
+	public OrchestratorProperties getProperties()
+	{
+		return properties;
+	}
+
+	public PeriodicQueuedTasks<Timer> getScheduler()
+	{
+		return scheduler;
 	}
 }

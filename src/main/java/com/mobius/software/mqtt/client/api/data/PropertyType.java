@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum PropertyType
 {
-	USERNAME(1), PASSWORD(2), CLEAN_SESSION(3), KEEPALIVE(4), TOPIC(5), QOS(6), RETAIN(7), DUPLICATE(8), COUNT(9), RESEND_TIME(10), IDENT_REGEX(11), IDENT_START(12);
+	USERNAME(1), PASSWORD(2), CLEAN_SESSION(3), KEEPALIVE(4), TOPIC(5), QOS(6), RETAIN(7), DUPLICATE(8), COUNT(9), RESEND_TIME(10);
 
 	private static final Map<Integer, PropertyType> intToTypeMap = new HashMap<Integer, PropertyType>();
 	private static final Map<String, PropertyType> strToTypeMap = new HashMap<String, PropertyType>();

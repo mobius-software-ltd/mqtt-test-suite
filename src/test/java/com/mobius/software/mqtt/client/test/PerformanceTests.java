@@ -40,8 +40,6 @@ import com.mobius.software.mqtt.client.api.data.ClientReport;
 import com.mobius.software.mqtt.client.api.data.CommandType;
 import com.mobius.software.mqtt.client.api.data.Counter;
 import com.mobius.software.mqtt.client.api.data.ErrorReport;
-import com.mobius.software.mqtt.client.api.data.Property;
-import com.mobius.software.mqtt.client.api.data.PropertyType;
 import com.mobius.software.mqtt.client.api.json.GenericJsonResponse;
 import com.mobius.software.mqtt.client.api.json.ResponseData;
 import com.mobius.software.mqtt.client.api.json.ScenarioRequest;
@@ -62,7 +60,7 @@ public class PerformanceTests
 		String regex = "%server%identity%";
 		String username = "first@foo.bar";
 		String server = "/192.168.0.100:1883";
-		String startIdentifier = "1";
+		Integer startIdentifier = 1;
 		int count = 10000;
 		long start = System.currentTimeMillis();
 		Set<String> set = new HashSet<>();
@@ -345,8 +343,6 @@ public class PerformanceTests
 		JSONContainer container = new JSONContainer(url);
 
 		ScenarioRequest request = container.getMapper().readValue(json, ScenarioRequest.class);
-		List<Property> connectProperty = request.getRequests().get(0).getCommands().get(0).getCommandProperties();
-		connectProperty.set(0, new Property(PropertyType.IDENT_REGEX, identityRegex));
 		assertNotNull(request);
 		assertTrue(request.validate());
 

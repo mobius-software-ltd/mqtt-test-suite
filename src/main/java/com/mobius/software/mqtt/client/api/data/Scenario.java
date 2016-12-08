@@ -26,10 +26,10 @@ import java.util.UUID;
 public class Scenario
 {
 	private UUID id;
-	private ConnectionProperties properties;
+	private ScenarioProperties properties;
 	private Integer count;
 	private Integer threshold;
-	private Integer startThreshold;	
+	private Integer startThreshold;
 	private Boolean continueOnError;
 	private List<Command> commands;
 
@@ -48,6 +48,7 @@ public class Scenario
 					return false;
 			}
 		}
+
 		return properties != null && properties.validate() && count != null && threshold != null && continueOnError != null && commands != null && !commands.isEmpty() && startThreshold != null;
 	}
 
@@ -61,12 +62,12 @@ public class Scenario
 		this.id = id;
 	}
 
-	public ConnectionProperties getProperties()
+	public ScenarioProperties getProperties()
 	{
 		return properties;
 	}
 
-	public void setProperties(ConnectionProperties properties)
+	public void setProperties(ScenarioProperties properties)
 	{
 		this.properties = properties;
 	}

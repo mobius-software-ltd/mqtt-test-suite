@@ -23,33 +23,31 @@ package com.mobius.software.mqtt.client;
 import io.netty.channel.ChannelFuture;
 
 import java.net.SocketAddress;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.mobius.software.mqtt.client.api.data.Command;
 import com.mobius.software.mqtt.client.api.data.ConnectionContext;
-import com.mobius.software.mqtt.client.controller.PeriodicQueuedTasks;
 import com.mobius.software.mqtt.client.controller.ScenarioOrchestrator;
 import com.mobius.software.mqtt.client.controller.task.MessageResendTimer;
 import com.mobius.software.mqtt.client.controller.task.Timer;
 import com.mobius.software.mqtt.client.net.ConnectionListener;
 import com.mobius.software.mqtt.client.net.NetworkListener;
 import com.mobius.software.mqtt.client.util.CommandParser;
-import com.mobius.software.mqtt.parser.QoS;
-import com.mobius.software.mqtt.parser.Text;
-import com.mobius.software.mqtt.parser.Topic;
-import com.mobius.software.mqtt.parser.Will;
+import com.mobius.software.mqtt.parser.avps.ConnackCode;
+import com.mobius.software.mqtt.parser.avps.MessageType;
+import com.mobius.software.mqtt.parser.avps.SubackCode;
+import com.mobius.software.mqtt.parser.avps.Text;
+import com.mobius.software.mqtt.parser.avps.Topic;
+import com.mobius.software.mqtt.parser.avps.Will;
 import com.mobius.software.mqtt.parser.header.api.MQDevice;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.*;
 
-public class PerformanceClient implements MQDevice, ConnectionListener, Timer
+public class Client implements MQDevice, ConnectionListener, Timer
 {
 	private AtomicBoolean status = new AtomicBoolean();
 	private ConnectionContext ctx;
@@ -59,28 +57,21 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	private AtomicReference<Command> pendingCommand = new AtomicReference<>();
 	private AtomicReference<ChannelFuture> channelHandler = new AtomicReference<ChannelFuture>();
 
-	private ConcurrentHashMap<Text, QoS> subscriptions = new ConcurrentHashMap<>();
-	private ConcurrentSkipListSet<Integer> pendingIncomingIdentifiers = new ConcurrentSkipListSet<>();
 	private TimersMap timers;
 	private AtomicLong timestamp;
 	private ScenarioOrchestrator orchestrator;
-	private Integer initialDelay;
-	private Long minPingInterval;
 
 	private boolean continueOnError;
 	private IdentityReport report = new IdentityReport();
 
-	public PerformanceClient(PeriodicQueuedTasks<Timer> scheduler, NetworkListener listener, List<Command> commands, SocketAddress serverAddress, Long resendInterval, Long minPingInterval, boolean continueOnError, ScenarioOrchestrator orchestrator, Integer initialDelay)
+	public Client(ScenarioOrchestrator orchestrator, NetworkListener listener, List<Command> commands)
 	{
-		this.ctx = new ConnectionContext(serverAddress, resendInterval);
+		this.ctx = new ConnectionContext(orchestrator.getProperties().getServerAddress(), orchestrator.getProperties().getResendInterval());
 		this.listener = listener;
 		this.commands = CommandParser.retrieveCommands(commands);
-		this.timers = new TimersMap(ctx, scheduler, listener, report);
-		this.continueOnError = continueOnError;
+		this.timers = new TimersMap(ctx, orchestrator.getScheduler(), listener, report);
 		this.orchestrator = orchestrator;
-		this.initialDelay = initialDelay;
-		this.minPingInterval = minPingInterval;
-		this.timestamp = new AtomicLong(System.currentTimeMillis() + initialDelay);
+		this.timestamp = new AtomicLong(System.currentTimeMillis() + orchestrator.getProperties().getInitialDelay());
 	}
 
 	@Override
@@ -108,7 +99,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 				else
 					channelHandler.compareAndSet(null, listener.connect(ctx.remoteAddress()));
 
-				timestamp.set(System.currentTimeMillis() + initialDelay);
+				timestamp.set(System.currentTimeMillis() + orchestrator.getProperties().getInitialDelay());
 				return true;
 			}
 			else
@@ -126,7 +117,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 						}
 					}
 
-					MQMessage message = CommandParser.toMessage(nextCommand, ctx.remoteAddress().toString());
+					MQMessage message = CommandParser.toMessage(nextCommand, orchestrator.getProperties().getIdentifierRegex(), orchestrator.getProperties().getStartIdentifier(), orchestrator.getProperties().getServerHostname());
 					switch (message.getType())
 					{
 					case DISCONNECT:
@@ -168,7 +159,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 					if (next != null)
 						timestamp.addAndGet(next.getSendTime());
 					else
-						timestamp.set(System.currentTimeMillis() + initialDelay);
+						timestamp.set(System.currentTimeMillis() + orchestrator.getProperties().getInitialDelay());
 				}
 				else
 				{
@@ -236,20 +227,13 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 		timers.restartPing();
 
 		Subscribe subscribe = (Subscribe) timer.retrieveMessage();
+		if (subscribe == null)
+			throw new MQTTException(MessageType.SUBACK, "received SUBACK with unexpected packetID");
+
 		Topic[] topics = subscribe.getTopics();
 		if (topics.length != codes.size())
 			throw new MQTTException(MessageType.SUBACK, "Invalid codes length: " + codes.size() + ", expected" + topics.length);
 
-		for (int i = 0; i < topics.length; i++)
-		{
-			Topic topic = subscribe.getTopics()[i];
-			SubackCode code = codes.get(i);
-			if (code != SubackCode.FAILURE)
-			{
-				QoS allowedQos = QoS.valueOf(code.getNum());
-				subscriptions.put(topic.getName(), allowedQos);
-			}
-		}
 		pendingCommand.set(null);
 	}
 
@@ -263,7 +247,9 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 		timers.restartPing();
 
 		Unsubscribe unsub = (Unsubscribe) timer.retrieveMessage();
-		subscriptions.keySet().removeAll(Arrays.asList(unsub.getTopics()));
+		if (unsub == null)
+			throw new MQTTException(MessageType.UNSUBACK, "received UNSUBACK with unexpected packetID");
+
 		pendingCommand.set(null);
 	}
 
@@ -274,12 +260,13 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 			report.countDuplicateIn();
 		switch (topic.getQos())
 		{
+
 		case AT_LEAST_ONCE:
 			listener.send(ctx.localAddress(), new Puback(packetID));
 			pendingCommand.set(null);
 			break;
+
 		case EXACTLY_ONCE:
-			pendingIncomingIdentifiers.add(packetID);
 			listener.send(ctx.localAddress(), new Pubrec(packetID));
 			pendingCommand.set(null);
 			break;
@@ -319,8 +306,6 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	{
 		Pubcomp pubcomp = new Pubcomp(packetID);
 		listener.send(ctx.localAddress(), pubcomp);
-		if (!pendingIncomingIdentifiers.remove(packetID))
-			throw new MQTTException(MessageType.PUBREL, "Unrecognized identifier");
 		pendingCommand.set(null);
 	}
 
@@ -338,7 +323,7 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	public void processPingresp()
 	{
 		Command nextCommand = checkNext();
-		if (nextCommand != null && getRealTimestamp() > (System.currentTimeMillis() + minPingInterval + ctx.getKeepalive() * 1000))
+		if (nextCommand != null && getRealTimestamp() > (System.currentTimeMillis() + orchestrator.getProperties().getMinPingInterval() + ctx.getKeepalive() * 1000))
 			timers.restartPing();
 		else
 			timers.stopPing();
@@ -379,9 +364,6 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 	{
 		report.reportError("CONNECTION", "connection closed:" + address);
 		timers.stopAllTimers();
-		pendingIncomingIdentifiers.clear();
-		if (ctx.getCleanSession() != null && ctx.getCleanSession())
-			subscriptions.clear();
 	}
 
 	@Override
@@ -405,8 +387,6 @@ public class PerformanceClient implements MQDevice, ConnectionListener, Timer
 			listener.close(ctx.localAddress());
 
 		timers.stopAllTimers();
-		pendingIncomingIdentifiers.clear();
-		subscriptions.clear();
 	}
 
 	public IdentityReport getReport()
