@@ -2,16 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.mobius.software.mqtt</groupId>
-	<artifactId>mqtt-performance-test</artifactId>
+	<artifactId>commons</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>MQTT Performance Test</name>
-	<modules>
-		<module>controller</module>
-		<module>api</module>
-		<module>runner</module>
-		<module>commons</module>
-	</modules>
+	<name>Performance Test Commons</name>
+	<packaging>jar</packaging>
+
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -20,12 +15,25 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.2</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.mobius.software.mqtt</groupId>
 			<artifactId>parser</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.0</version>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>

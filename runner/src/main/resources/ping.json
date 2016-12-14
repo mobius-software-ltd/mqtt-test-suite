@@ -1,0 +1,78 @@
+{
+  "controllers": [
+    {
+      "hostname": "168.63.99.58",
+      "port": 9998,
+      "identifierRegex": "%identity%",
+      "startIdentifier": 1
+    },
+    {
+      "hostname": "168.63.98.228",
+      "port": 9998,
+      "identifierRegex": "%identity%",
+      "startIdentifier": 50001
+    },
+    {
+      "hostname": "137.116.205.185",
+      "port": 9998,
+      "identifierRegex": "%identity%",
+      "startIdentifier": 100001
+    }
+  ],
+  "requestTimeout": 420000,
+  "scenarioRequest": {
+    "requests": [
+      {
+        "id": "816452de-e487-4535-afcd-c90001dec3da",
+        "properties": {
+          "serverHostname": "13.94.158.185",
+          "serverPort": 1883,
+          "resendInterval": 3000,
+	  "identifierRegex": null,
+          "startIdentifier": 1
+        },
+        "count": 37500,
+        "threshold": 37500,
+        "startThreshold": 1000,
+        "continueOnError": true,
+        "commands": [
+          {
+            "type": "CONNECT",
+            "sendTime": 0,
+            "commandProperties": [
+              {
+                "type": "IDENT_REGEX",
+                "value": "%account%identity%"
+              },
+              {
+                "type": "IDENT_START",
+                "value": "1"
+              },
+              {
+                "type": "USERNAME",
+                "value": "second@foo.bar"
+              },
+              {
+                "type": "PASSWORD",
+                "value": "22222222"
+              },
+              {
+                "type": "CLEAN_SESSION",
+                "value": "true"
+              },
+              {
+                "type": "KEEPALIVE",
+                "value": "10"
+              }
+            ]
+          },
+          {
+            "type": "DISCONNECT",
+            "sendTime": "300000",
+            "commandProperties": null
+          }
+        ]
+      }
+    ]
+  }
+}
