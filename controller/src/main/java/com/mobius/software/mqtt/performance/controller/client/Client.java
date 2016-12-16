@@ -46,7 +46,7 @@ import com.mobius.software.mqtt.performance.commons.data.Command;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 import com.mobius.software.mqtt.performance.controller.Orchestrator;
 import com.mobius.software.mqtt.performance.controller.net.ConnectionListener;
-import com.mobius.software.mqtt.performance.controller.net.NetworkListener;
+import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 import com.mobius.software.mqtt.performance.controller.task.MessageResendTimer;
 import com.mobius.software.mqtt.performance.controller.task.Timer;
 
@@ -55,7 +55,7 @@ public class Client implements MQDevice, ConnectionListener, Timer
 	private String clientID;
 	private AtomicBoolean status = new AtomicBoolean();
 	private ConnectionContext ctx;
-	private NetworkListener listener;
+	private NetworkHandler listener;
 
 	private ConcurrentLinkedQueue<Command> commands = new ConcurrentLinkedQueue<>();
 	private AtomicReference<Command> pendingCommand = new AtomicReference<>();
@@ -68,7 +68,7 @@ public class Client implements MQDevice, ConnectionListener, Timer
 	private AtomicInteger failedCommands = new AtomicInteger(0);
 	private IdentityReport report;
 
-	public Client(String clientID, Orchestrator orchestrator, NetworkListener listener, List<Command> commands)
+	public Client(String clientID, Orchestrator orchestrator, NetworkHandler listener, List<Command> commands)
 	{
 		this.clientID = clientID;
 		this.ctx = new ConnectionContext(orchestrator.getProperties().getServerAddress(), orchestrator.getProperties().getResendInterval());
@@ -129,13 +129,13 @@ public class Client implements MQDevice, ConnectionListener, Timer
 						}
 
 						MQMessage message = CommandParser.toMessage(nextCommand, clientID);
-						Boolean closeChannel=false;
+						Boolean closeChannel = false;
 						switch (message.getType())
 						{
 						case DISCONNECT:
 							timers.stopAllTimers();
 							pendingCommand.set(null);
-							closeChannel=true;
+							closeChannel = true;
 							break;
 						case PUBLISH:
 							Publish pub = (Publish) message;
@@ -166,10 +166,10 @@ public class Client implements MQDevice, ConnectionListener, Timer
 						}
 						report.countOut(message.getType());
 						listener.send(ctx.localAddress(), message);
-						
-						if(closeChannel)
+
+						if (closeChannel)
 							listener.close(ctx.localAddress());
-						
+
 						Command next = commands.peek();
 						if (next != null)
 							timestamp.addAndGet(next.getSendTime());

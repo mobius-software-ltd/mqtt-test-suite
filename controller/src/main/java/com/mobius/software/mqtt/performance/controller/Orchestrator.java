@@ -35,7 +35,6 @@ public class Orchestrator
 {
 	private OrchestratorProperties properties;
 	private PeriodicQueuedTasks<Timer> scheduler;
-	private IdentifierStorage identifierStorage;
 	private List<Client> clientList;
 
 	private AtomicInteger startingCount = new AtomicInteger(0);
@@ -45,11 +44,10 @@ public class Orchestrator
 	private long startTime;
 	private long finishTime;
 
-	public Orchestrator(OrchestratorProperties properties, PeriodicQueuedTasks<Timer> scheduler, List<Client> clientList, IdentifierStorage identifierStorage)
+	public Orchestrator(OrchestratorProperties properties, PeriodicQueuedTasks<Timer> scheduler, List<Client> clientList)
 	{
 		this.properties = properties;
 		this.scheduler = scheduler;
-		this.identifierStorage = identifierStorage;
 		this.clientList = clientList;
 	}
 

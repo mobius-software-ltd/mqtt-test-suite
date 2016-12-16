@@ -26,7 +26,7 @@ import java.net.SocketAddress;
 
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 
-public interface NetworkListener
+public interface NetworkHandler
 {
 	ChannelFuture connect(SocketAddress serverAddress);
 
@@ -35,4 +35,6 @@ public interface NetworkListener
 	void send(SocketAddress address, MQMessage message);
 
 	void close(SocketAddress address);
+	
+	void init(SocketAddress serverAddress);
 }

@@ -50,7 +50,7 @@ import com.mobius.software.mqtt.performance.api.json.UniqueIdentifierRequest;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 import com.mobius.software.mqtt.performance.commons.util.IdentifierParser;
 import com.mobius.software.mqtt.performance.controller.client.Client;
-import com.mobius.software.mqtt.performance.controller.net.NetworkListener;
+import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 import com.mobius.software.mqtt.performance.controller.net.TCPClient;
 import com.mobius.software.mqtt.performance.controller.task.Timer;
 
@@ -64,7 +64,7 @@ public class Controller
 	private LinkedBlockingQueue<Timer> mainQueue = new LinkedBlockingQueue<>();
 	private IdentifierStorage identifierStorage = new IdentifierStorage();
 	private ConcurrentHashMap<UUID, Orchestrator> scenarioMap = new ConcurrentHashMap<>();
-	private NetworkListener listener = new TCPClient();
+	private NetworkHandler listener = new TCPClient();
 	private Config config;
 
 	public Controller() throws IOException
@@ -110,8 +110,9 @@ public class Controller
 			{
 				List<Client> clientList = new ArrayList<>();
 				OrchestratorProperties properties = OrchestratorProperties.fromScenarioProperties(scenario.getId(), scenario.getProperties(), scenario.getThreshold(), scenario.getStartThreshold(), scenario.getContinueOnError(), config.getInitialDelay());
-				Orchestrator orchestrator = new Orchestrator(properties, scheduler, clientList, identifierStorage);
+				Orchestrator orchestrator = new Orchestrator(properties, scheduler, clientList);
 				String username = CommandParser.retrieveUsername(scenario.getCommands());
+				listener.init(orchestrator.getProperties().getServerAddress());
 				for (int i = 0; i < scenario.getCount(); i++)
 				{
 					String clientID = null;
@@ -143,10 +144,7 @@ public class Controller
 	{
 		Orchestrator orchestrator = scenarioMap.get(json.getId());
 		if (orchestrator == null)
-		{
-			System.out.println("NOT FOUND SCENARIO-ID:" + json.getId());
 			return new ReportResponse(ResponseData.NOT_FOUND);
-		}
 		return orchestrator.report();
 	}
 

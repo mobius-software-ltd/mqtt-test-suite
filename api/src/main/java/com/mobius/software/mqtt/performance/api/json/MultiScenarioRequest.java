@@ -73,7 +73,20 @@ public class MultiScenarioRequest
 
 	public boolean validate()
 	{
-		return controllers != null && !controllers.isEmpty() && scenarioRequest != null && scenarioRequest.validate() && requestTimeout != null;
+		if (controllers == null || controllers.isEmpty())
+			return false;
+
+		if (scenarioRequest == null || !scenarioRequest.validate())
+			return false;
+
+		for (ClientController controller : controllers)
+		{
+			if (!controller.validate())
+				return false;
+			if (controller.getScenarioDelays().size() != scenarioRequest.getRequests().size())
+				return false;
+		}
+		return requestTimeout != null;
 	}
 
 	public Map<UUID, SummaryData> prepareSummaryData()

@@ -32,7 +32,7 @@ public class ClientController
 	private Integer port;
 	private String identifierRegex;
 	private Integer startIdentifier;
-	private Integer scenarioDelay;
+	private List<Integer> scenarioDelays;
 
 	public ClientController()
 	{
@@ -79,14 +79,14 @@ public class ClientController
 		this.startIdentifier = startIdentifier;
 	}
 
-	public Integer getScenarioDelay()
+	public List<Integer> getScenarioDelays()
 	{
-		return scenarioDelay;
+		return scenarioDelays;
 	}
 
-	public void setScenarioDelay(Integer scenarioDelay)
+	public void setScenarioDelays(List<Integer> scenarioDelays)
 	{
-		this.scenarioDelay = scenarioDelay;
+		this.scenarioDelays = scenarioDelays;
 	}
 
 	public boolean validate()
@@ -94,8 +94,12 @@ public class ClientController
 		if (port == null || port < 1 || port > 65535)
 			return false;
 
-		if (scenarioDelay == null || scenarioDelay < 0)
+		if (scenarioDelays == null)
 			return false;
+
+		for (Integer delay : scenarioDelays)
+			if (delay < 0)
+				return false;
 
 		return hostname != null && identifierRegex != null && startIdentifier != null;
 	}
@@ -103,9 +107,11 @@ public class ClientController
 	public List<Scenario> translateScenarioRequests(ScenarioRequest scenarioRequest)
 	{
 		List<Scenario> scenarios = new ArrayList<>();
-		for (Scenario scenario : scenarioRequest.getRequests())
+		for (int i = 0; i < scenarioRequest.getRequests().size(); i++)
 		{
+			Scenario scenario = scenarioRequest.getRequests().get(i);
 			scenario.setId(UUID.randomUUID());
+			Integer scenarioDelay = scenarioDelays.get(i);
 			scenario.getProperties().setScenarioDelay(scenarioDelay);
 			scenario.getProperties().setIdentifierRegex(identifierRegex);
 			scenario.getProperties().setStartIdentifier(startIdentifier);

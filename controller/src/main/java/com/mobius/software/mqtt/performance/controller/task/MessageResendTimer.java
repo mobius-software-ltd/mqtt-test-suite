@@ -26,19 +26,19 @@ import com.mobius.software.mqtt.parser.header.impl.Publish;
 import com.mobius.software.mqtt.performance.api.data.ConnectionContext;
 import com.mobius.software.mqtt.performance.api.data.IdentityReport;
 import com.mobius.software.mqtt.performance.controller.PeriodicQueuedTasks;
-import com.mobius.software.mqtt.performance.controller.net.NetworkListener;
+import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 
 public class MessageResendTimer implements Timer
 {
 	private ConnectionContext ctx;
 	private PeriodicQueuedTasks<Timer> scheduler;
-	private NetworkListener listener;
+	private NetworkHandler listener;
 	private MQMessage message;
 	private Long timestamp;
 	private Long resendInterval;
 	private IdentityReport report;
 
-	public MessageResendTimer(ConnectionContext ctx, PeriodicQueuedTasks<Timer> scheduler, NetworkListener listener, MQMessage message, Long resendInterval, IdentityReport report)
+	public MessageResendTimer(ConnectionContext ctx, PeriodicQueuedTasks<Timer> scheduler, NetworkHandler listener, MQMessage message, Long resendInterval, IdentityReport report)
 	{
 		this.ctx = ctx;
 		this.scheduler = scheduler;

@@ -32,7 +32,7 @@ import com.mobius.software.mqtt.parser.header.impl.Pubrel;
 import com.mobius.software.mqtt.performance.api.data.ConnectionContext;
 import com.mobius.software.mqtt.performance.api.data.IdentityReport;
 import com.mobius.software.mqtt.performance.controller.PeriodicQueuedTasks;
-import com.mobius.software.mqtt.performance.controller.net.NetworkListener;
+import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 import com.mobius.software.mqtt.performance.controller.task.MessageResendTimer;
 import com.mobius.software.mqtt.performance.controller.task.Timer;
 
@@ -44,13 +44,13 @@ public class TimersMap
 	private IdentityReport report;
 	private ConnectionContext ctx;
 	private PeriodicQueuedTasks<Timer> scheduler;
-	private NetworkListener listener;
+	private NetworkHandler listener;
 
 	private ConcurrentSkipListMap<Integer, MessageResendTimer> timersMap = new ConcurrentSkipListMap<>();
 	private AtomicReference<Timer> connect = new AtomicReference<>();
 	private MessageResendTimer ping;
 
-	public TimersMap(ConnectionContext ctx, PeriodicQueuedTasks<Timer> scheduler, NetworkListener listener, IdentityReport report)
+	public TimersMap(ConnectionContext ctx, PeriodicQueuedTasks<Timer> scheduler, NetworkHandler listener, IdentityReport report)
 	{
 		this.ctx = ctx;
 		this.scheduler = scheduler;
