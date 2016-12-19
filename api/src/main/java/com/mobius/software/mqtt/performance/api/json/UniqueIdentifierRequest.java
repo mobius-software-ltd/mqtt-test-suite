@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.api.json;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,9 +18,12 @@ package com.mobius.software.mqtt.performance.api.json;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.api.json;
+
 import java.util.UUID;
 
-public class UniqueIdentifierRequest
+@SuppressWarnings("serial")
+public class UniqueIdentifierRequest extends GenericJsonRequest
 {
 	private UUID id;
 

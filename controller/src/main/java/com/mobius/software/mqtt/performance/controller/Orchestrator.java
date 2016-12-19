@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,21 +18,23 @@ package com.mobius.software.mqtt.performance.controller;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.controller;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mobius.software.mqtt.performance.api.data.ClientReport;
-import com.mobius.software.mqtt.performance.api.data.ReportResponse;
+import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.api.json.ResponseData;
 import com.mobius.software.mqtt.performance.controller.client.Client;
-import com.mobius.software.mqtt.performance.controller.task.Timer;
+import com.mobius.software.mqtt.performance.controller.task.TimedTask;
 
 public class Orchestrator
 {
 	private OrchestratorProperties properties;
-	private PeriodicQueuedTasks<Timer> scheduler;
+	private PeriodicQueuedTasks<TimedTask> scheduler;
 	private List<Client> clientList;
 
 	private AtomicInteger startingCount = new AtomicInteger(0);
@@ -44,7 +44,7 @@ public class Orchestrator
 	private long startTime;
 	private long finishTime;
 
-	public Orchestrator(OrchestratorProperties properties, PeriodicQueuedTasks<Timer> scheduler, List<Client> clientList)
+	public Orchestrator(OrchestratorProperties properties, PeriodicQueuedTasks<TimedTask> scheduler, List<Client> clientList)
 	{
 		this.properties = properties;
 		this.scheduler = scheduler;
@@ -114,7 +114,7 @@ public class Orchestrator
 	{
 		List<ClientReport> reports = new ArrayList<>();
 		for (Client client : clientList)
-			reports.add(ClientReport.valueOf(client.retrieveReport()));
+			reports.add(client.retrieveReport().translate());
 		return new ReportResponse(ResponseData.SUCCESS, properties.getScenarioID(), startTime, finishTime, reports);
 	}
 
@@ -123,7 +123,7 @@ public class Orchestrator
 		return properties;
 	}
 
-	public PeriodicQueuedTasks<Timer> getScheduler()
+	public PeriodicQueuedTasks<TimedTask> getScheduler()
 	{
 		return scheduler;
 	}

@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.api.data;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -19,6 +17,8 @@ package com.mobius.software.mqtt.performance.api.data;
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+
+package com.mobius.software.mqtt.performance.api.data;
 
 import java.util.List;
 import java.util.UUID;
@@ -50,7 +50,6 @@ public class Scenario
 					return false;
 			}
 		}
-
 		return properties != null && properties.validate() && count != null && threshold != null && continueOnError != null && commands != null && !commands.isEmpty() && startThreshold != null;
 	}
 

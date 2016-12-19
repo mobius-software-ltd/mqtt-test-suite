@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller.client;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,7 +18,7 @@ package com.mobius.software.mqtt.performance.controller.client;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import io.netty.channel.ChannelFuture;
+package com.mobius.software.mqtt.performance.controller.client;
 
 import java.net.SocketAddress;
 import java.util.List;
@@ -38,19 +36,26 @@ import com.mobius.software.mqtt.parser.avps.Topic;
 import com.mobius.software.mqtt.parser.avps.Will;
 import com.mobius.software.mqtt.parser.header.api.MQDevice;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
-import com.mobius.software.mqtt.parser.header.impl.*;
-import com.mobius.software.mqtt.performance.api.data.ConnectionContext;
+import com.mobius.software.mqtt.parser.header.impl.Connect;
+import com.mobius.software.mqtt.parser.header.impl.Puback;
+import com.mobius.software.mqtt.parser.header.impl.Pubcomp;
+import com.mobius.software.mqtt.parser.header.impl.Publish;
+import com.mobius.software.mqtt.parser.header.impl.Pubrec;
+import com.mobius.software.mqtt.parser.header.impl.Pubrel;
+import com.mobius.software.mqtt.parser.header.impl.Subscribe;
+import com.mobius.software.mqtt.parser.header.impl.Unsubscribe;
 import com.mobius.software.mqtt.performance.api.data.ErrorType;
-import com.mobius.software.mqtt.performance.api.data.IdentityReport;
 import com.mobius.software.mqtt.performance.commons.data.Command;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 import com.mobius.software.mqtt.performance.controller.Orchestrator;
 import com.mobius.software.mqtt.performance.controller.net.ConnectionListener;
 import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 import com.mobius.software.mqtt.performance.controller.task.MessageResendTimer;
-import com.mobius.software.mqtt.performance.controller.task.Timer;
+import com.mobius.software.mqtt.performance.controller.task.TimedTask;
 
-public class Client implements MQDevice, ConnectionListener, Timer
+import io.netty.channel.ChannelFuture;
+
+public class Client implements MQDevice, ConnectionListener, TimedTask
 {
 	private String clientID;
 	private AtomicBoolean status = new AtomicBoolean();
@@ -208,7 +213,7 @@ public class Client implements MQDevice, ConnectionListener, Timer
 	public void processConnack(ConnackCode code, boolean sessionPresent)
 	{
 		orchestrator.notifyOnStart();
-		Timer timer = timers.retrieveConnect();
+		TimedTask timer = timers.retrieveConnect();
 		if (timer != null)
 			timer.stop();
 

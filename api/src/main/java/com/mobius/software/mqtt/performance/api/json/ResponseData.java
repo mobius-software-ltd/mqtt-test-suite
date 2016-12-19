@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.api.json;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -19,6 +17,8 @@ package com.mobius.software.mqtt.performance.api.json;
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+
+package com.mobius.software.mqtt.performance.api.json;
 
 public interface ResponseData
 {

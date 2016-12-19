@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller.net;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,13 +18,15 @@ package com.mobius.software.mqtt.performance.controller.net;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+package com.mobius.software.mqtt.performance.controller.net;
 
 import java.net.SocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 
 public class Handler extends SimpleChannelInboundHandler<MQMessage>
 {

@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.runner;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,14 +18,16 @@ package com.mobius.software.mqtt.performance.runner;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.runner;
+
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.mobius.software.mqtt.performance.api.data.ReportResponse;
-import com.mobius.software.mqtt.performance.api.json.GenericJsonResponse;
+import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
+import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
@@ -61,18 +61,13 @@ public class JSONContainer
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
-	public GenericJsonResponse post(Object request) throws Exception
+	public GenericJsonRequest post(Object request) throws Exception
 	{
 		Builder builder = getResource().getRequestBuilder().type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);
-		/*GenericJsonResponse response = getMapper().readValue(builder.post(String.class), new TypeReference<GenericJsonResponse>()
-		{
-		});
-		return response;
-		*/
-		GenericJsonResponse response = null;
+		GenericJsonRequest response = null;
 		try
 		{
-			response = builder.post(GenericJsonResponse.class, request);
+			response = builder.post(GenericJsonRequest.class, request);
 		}
 		catch (Exception e)
 		{
@@ -89,12 +84,12 @@ public class JSONContainer
 		return builder.post(ReportResponse.class, request);
 	}
 
-	public GenericJsonResponse get() throws Exception
+	public GenericJsonRequest get() throws Exception
 	{
 		Builder builder = getResource().getRequestBuilder().type(MediaType.APPLICATION_JSON);
 		builder = builder.accept(MediaType.APPLICATION_JSON);
 		getMapper();
-		GenericJsonResponse response = getMapper().readValue(builder.get(String.class), new TypeReference<GenericJsonResponse>()
+		GenericJsonRequest response = getMapper().readValue(builder.get(String.class), new TypeReference<GenericJsonRequest>()
 		{
 		});
 		return response;

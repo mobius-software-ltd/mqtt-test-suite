@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,6 +18,8 @@ package com.mobius.software.mqtt.performance.controller;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.controller;
+
 import java.net.URI;
 import java.util.Arrays;
 
@@ -30,16 +30,16 @@ public class Config
 	private static final String WORKERS = "-workers=";
 	private static final String TIMERS_INTERVAL = "-timersInterval=";
 	private static final String INITIAL_DELAY = "-delay=";
-	
+
 	private Integer workers;
 	private Integer timersInterval;
 	private Integer initialDelay;
-	
+
 	public Config(URI baseURI, Integer workers, Integer timersInterval, Integer initialDelay)
 	{
 		this.workers = workers;
 		this.timersInterval = timersInterval;
-		this.initialDelay = initialDelay;		
+		this.initialDelay = initialDelay;
 	}
 
 	public static Config parse(String[] args)
@@ -58,7 +58,7 @@ public class Config
 
 			if (!args[2].startsWith(INITIAL_DELAY))
 				throw new IllegalArgumentException(ERROR_MESSAGE + INITIAL_DELAY + ", args: " + Arrays.asList(args));
-			initialDelay = Integer.parseInt(args[2].replace(INITIAL_DELAY, ""));						
+			initialDelay = Integer.parseInt(args[2].replace(INITIAL_DELAY, ""));
 		}
 		catch (NumberFormatException e)
 		{

@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller.net;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,12 +18,14 @@ package com.mobius.software.mqtt.performance.controller.net;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToByteEncoder;
+package com.mobius.software.mqtt.performance.controller.net;
 
 import com.mobius.software.mqtt.parser.MQParser;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
 
 public class Encoder extends MessageToByteEncoder<MQMessage>
 {

@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.commons.util;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,6 +18,8 @@ package com.mobius.software.mqtt.performance.commons.util;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.commons.util;
+
 import java.net.URI;
 
 import com.mobius.software.mqtt.performance.commons.data.PathSegment;
@@ -27,15 +27,15 @@ import com.mobius.software.mqtt.performance.commons.data.PathSegment;
 public class URLBuilder
 {
 	private static final String SEPARATOR = "/";
-	private static final String prefix = "http://";
-	private static final String addressSeparator = ":";
+	private static final String PROTOCOL_HTTP = "http://";
+	private static final String ADDRESS_SEPRATOR = ":";
 
-	public static String build(URI baseURI, PathSegment... segments)
+	public static String build(URI baseURL, PathSegment... segments)
 	{
 		if (segments == null || segments.length == 0)
 			throw new IllegalArgumentException("please specify valid url");
 		StringBuilder sb = new StringBuilder();
-		sb.append(baseURI);
+		sb.append(baseURL);
 		for (int i = 0; i < segments.length; i++)
 		{
 			sb.append(segments[i].getPath());
@@ -47,14 +47,11 @@ public class URLBuilder
 
 	public static String build(String hostname, Integer port, PathSegment... segments)
 	{
-		if (hostname == null || port == null)
-			throw new IllegalArgumentException("please specify valid controller hostname and port");
-
 		if (segments == null || segments.length == 0)
 			throw new IllegalArgumentException("please specify valid url");
 
 		StringBuilder sb = new StringBuilder();
-		String baseURI = buildBaseURI(hostname, port);
+		String baseURI = buildBaseURL(hostname, port);
 		sb.append(baseURI);
 		for (int i = 0; i < segments.length; i++)
 		{
@@ -65,16 +62,16 @@ public class URLBuilder
 		return sb.toString();
 	}
 
-	public static String build(String baseURI, PathSegment... segments)
+	public static String build(String baseURL, PathSegment... segments)
 	{
-		if (baseURI == null)
+		if (baseURL == null)
 			throw new IllegalArgumentException("please specify valid controller baseURI");
 
 		if (segments == null || segments.length == 0)
 			throw new IllegalArgumentException("please specify valid url");
 
 		StringBuilder sb = new StringBuilder();
-		sb.append(baseURI);
+		sb.append(baseURL);
 		for (int i = 0; i < segments.length; i++)
 		{
 			sb.append(segments[i].getPath());
@@ -84,8 +81,18 @@ public class URLBuilder
 		return sb.toString();
 	}
 
-	public static String buildBaseURI(String hostname, Integer port)
+	public static String retriveBaseURL(String requestURL)
 	{
-		return prefix + hostname + addressSeparator + port + SEPARATOR;
+		if (!requestURL.contains(PathSegment.CONTROLLER.getPath()))
+			throw new IllegalArgumentException("invalid request URL:" + requestURL + ". Expected to contain root segment " + PathSegment.CONTROLLER.getPath());
+		return requestURL.substring(0, requestURL.indexOf(PathSegment.CONTROLLER.getPath()));
+	}
+
+	public static String buildBaseURL(String hostname, Integer port)
+	{
+		if (hostname == null || port == null || port < 0 || port > 65535)
+			throw new IllegalArgumentException("please specify valid controller hostname and port");
+
+		return PROTOCOL_HTTP + hostname + ADDRESS_SEPRATOR + port + SEPARATOR;
 	}
 }

@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller.client;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,21 +18,21 @@ package com.mobius.software.mqtt.performance.controller.client;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.controller.client;
+
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mobius.software.mqtt.parser.header.api.CountableMessage;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Pingreq;
 import com.mobius.software.mqtt.parser.header.impl.Pubrel;
-import com.mobius.software.mqtt.performance.api.data.ConnectionContext;
-import com.mobius.software.mqtt.performance.api.data.IdentityReport;
 import com.mobius.software.mqtt.performance.controller.PeriodicQueuedTasks;
 import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 import com.mobius.software.mqtt.performance.controller.task.MessageResendTimer;
-import com.mobius.software.mqtt.performance.controller.task.Timer;
+import com.mobius.software.mqtt.performance.controller.task.TimedTask;
 
 public class TimersMap
 {
@@ -43,14 +41,15 @@ public class TimersMap
 
 	private IdentityReport report;
 	private ConnectionContext ctx;
-	private PeriodicQueuedTasks<Timer> scheduler;
+	private PeriodicQueuedTasks<TimedTask> scheduler;
 	private NetworkHandler listener;
 
-	private ConcurrentSkipListMap<Integer, MessageResendTimer> timersMap = new ConcurrentSkipListMap<>();
-	private AtomicReference<Timer> connect = new AtomicReference<>();
+	private AtomicInteger currID = new AtomicInteger(0);
+	private ConcurrentHashMap<Integer, MessageResendTimer> timersMap = new ConcurrentHashMap<>();
+	private MessageResendTimer connect;
 	private MessageResendTimer ping;
 
-	public TimersMap(ConnectionContext ctx, PeriodicQueuedTasks<Timer> scheduler, NetworkHandler listener, IdentityReport report)
+	public TimersMap(ConnectionContext ctx, PeriodicQueuedTasks<TimedTask> scheduler, NetworkHandler listener, IdentityReport report)
 	{
 		this.ctx = ctx;
 		this.scheduler = scheduler;
@@ -61,31 +60,39 @@ public class TimersMap
 	public void store(MQMessage message)
 	{
 		MessageResendTimer timer = new MessageResendTimer(ctx, scheduler, listener, message, ctx.getResendInterval(), report);
-		Integer packetID = (timersMap.isEmpty() || timersMap.lastKey() == MAX_VALUE) ? FIRST_ID : timersMap.lastKey();
+		Integer packetID = null;
 		do
 		{
 			if (timersMap.size() == MAX_VALUE)
 				throw new MQTTException(message.getType(), "outgoing identifier overflow");
-			packetID++;
+
+			packetID = currID.incrementAndGet();
+			if (packetID == MAX_VALUE)
+			{
+				currID.set(FIRST_ID);
+				packetID = FIRST_ID;
+			}
 		}
 		while (timersMap.putIfAbsent(packetID, timer) != null);
+
 		CountableMessage countable = (CountableMessage) message;
 		countable.setPacketID(packetID);
+
 		scheduler.store(timer.getRealTimestamp(), timer);
 	}
 
-	public Timer store(Pubrel message)
+	public TimedTask store(Pubrel message)
 	{
 		MessageResendTimer timer = new MessageResendTimer(ctx, scheduler, listener, message, ctx.getResendInterval(), report);
-		Timer oldTimer = timersMap.put(message.getPacketID(), timer);
+		TimedTask oldTimer = timersMap.put(message.getPacketID(), timer);
 		if (oldTimer != null)
 			oldTimer.stop();
 		return timer;
 	}
 
-	public Timer retrieveConnect()
+	public MessageResendTimer retrieveConnect()
 	{
-		return connect.get();
+		return connect;
 	}
 
 	public MessageResendTimer remove(Integer packetID)
@@ -98,8 +105,8 @@ public class TimersMap
 
 	public void stopAllTimers()
 	{
-		if (this.connect.get() != null)
-			connect.get().stop();
+		if (this.connect != null)
+			connect.stop();
 
 		if (this.ping != null)
 			ping.stop();
@@ -115,10 +122,10 @@ public class TimersMap
 
 	public void storeConnect(MQMessage message)
 	{
-		Timer timer = new MessageResendTimer(ctx, scheduler, listener, message, ctx.getResendInterval(), report);
-		Timer oldTimer = connect.getAndSet(timer);
-		if (oldTimer != null)
-			oldTimer.stop();
+		if (connect != null)
+			connect.stop();
+		connect = new MessageResendTimer(ctx, scheduler, listener, message, ctx.getResendInterval(), report);
+		scheduler.store(connect.getRealTimestamp(), connect);
 	}
 
 	public void restartPing()
@@ -137,8 +144,6 @@ public class TimersMap
 	public void stopPing()
 	{
 		if (this.ping != null)
-		{
 			this.ping.stop();
-		}
 	}
 }

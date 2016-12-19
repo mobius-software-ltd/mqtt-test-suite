@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -19,6 +17,8 @@ package com.mobius.software.mqtt.performance.controller;
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+
+package com.mobius.software.mqtt.performance.controller;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,9 +41,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.mobius.software.mqtt.performance.api.data.ReportResponse;
 import com.mobius.software.mqtt.performance.api.data.Scenario;
-import com.mobius.software.mqtt.performance.api.json.GenericJsonResponse;
+import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
+import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.api.json.ResponseData;
 import com.mobius.software.mqtt.performance.api.json.ScenarioRequest;
 import com.mobius.software.mqtt.performance.api.json.UniqueIdentifierRequest;
@@ -52,16 +52,19 @@ import com.mobius.software.mqtt.performance.commons.util.IdentifierParser;
 import com.mobius.software.mqtt.performance.controller.client.Client;
 import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 import com.mobius.software.mqtt.performance.controller.net.TCPClient;
-import com.mobius.software.mqtt.performance.controller.task.Timer;
+import com.mobius.software.mqtt.performance.controller.task.TimedTask;
 
 @Path("controller")
 @Singleton
 public class Controller
 {
+	private static final long TERMINATION_TIMEOUT = 1000;
+
+	private List<Worker> workers = new ArrayList<>();
 	private ExecutorService workersExecutor;
 	private ScheduledExecutorService timersExecutor;
-	private PeriodicQueuedTasks<Timer> scheduler;
-	private LinkedBlockingQueue<Timer> mainQueue = new LinkedBlockingQueue<>();
+	private PeriodicQueuedTasks<TimedTask> scheduler;
+	private LinkedBlockingQueue<TimedTask> mainQueue = new LinkedBlockingQueue<>();
 	private IdentifierStorage identifierStorage = new IdentifierStorage();
 	private ConcurrentHashMap<UUID, Orchestrator> scenarioMap = new ConcurrentHashMap<>();
 	private NetworkHandler listener = new TCPClient();
@@ -86,23 +89,26 @@ public class Controller
 		String[] args = value.split("\\r?\\n");
 		this.config = Config.parse(args);
 
-		scheduler = new PeriodicQueuedTasks<Timer>(config.getTimersInterval(), mainQueue);
+		scheduler = new PeriodicQueuedTasks<TimedTask>(config.getTimersInterval(), mainQueue);
 		workersExecutor = Executors.newFixedThreadPool(config.getWorkers());
 		for (int i = 0; i < config.getWorkers(); i++)
-			workersExecutor.submit(new ScenarioRunner(scheduler, mainQueue));
-
+		{
+			Worker worker = new Worker(scheduler, mainQueue);
+			workers.add(worker);
+			workersExecutor.submit(worker);
+		}
 		timersExecutor = Executors.newScheduledThreadPool(2);
-		timersExecutor.scheduleAtFixedRate(new TimersRunner(scheduler), 0, config.getTimersInterval(), TimeUnit.MILLISECONDS);
+		timersExecutor.scheduleAtFixedRate(new PeriodicTasksRunner(scheduler), 0, config.getTimersInterval(), TimeUnit.MILLISECONDS);
 	}
 
 	@POST
 	@Path("scenario")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public GenericJsonResponse scenario(ScenarioRequest json)
+	public GenericJsonRequest scenario(ScenarioRequest json)
 	{
 		if (!json.validate())
-			return new GenericJsonResponse(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
+			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
 
 		try
 		{
@@ -127,13 +133,11 @@ public class Controller
 				orchestrator.start();
 				scenarioMap.put(scenario.getId(), orchestrator);
 			}
-
-			return new GenericJsonResponse(ResponseData.SUCCESS, null);
+			return new GenericJsonRequest(ResponseData.SUCCESS, null);
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
-			return new GenericJsonResponse(ResponseData.ERROR, ResponseData.INTERNAL_SERVER_ERROR);
+			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INTERNAL_SERVER_ERROR + e.getMessage());
 		}
 	}
 
@@ -152,18 +156,18 @@ public class Controller
 	@Path("clear")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public GenericJsonResponse clear(UniqueIdentifierRequest json)
+	public GenericJsonRequest clear(UniqueIdentifierRequest json)
 	{
 		if (!json.validate())
-			return new GenericJsonResponse(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
+			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
 
 		Orchestrator orchestrator = scenarioMap.get(json.getId());
 		if (orchestrator == null)
-			return new GenericJsonResponse(ResponseData.ERROR, ResponseData.NOT_FOUND);
+			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.NOT_FOUND);
 
 		orchestrator.terminate();
 
-		return new GenericJsonResponse(ResponseData.SUCCESS, null);
+		return new GenericJsonRequest(ResponseData.SUCCESS, null);
 	}
 
 	public void shutdownGracefully()
@@ -178,6 +182,8 @@ public class Controller
 
 	private void shutdown(boolean mayInterrupt)
 	{
+		for (Worker worker : workers)
+			worker.terminate();
 		if (mayInterrupt)
 			workersExecutor.shutdownNow();
 		else
@@ -187,5 +193,15 @@ public class Controller
 			timersExecutor.shutdownNow();
 		else
 			timersExecutor.shutdown();
+
+		try
+		{
+			workersExecutor.awaitTermination(TERMINATION_TIMEOUT, TimeUnit.MILLISECONDS);
+			timersExecutor.awaitTermination(TERMINATION_TIMEOUT, TimeUnit.MILLISECONDS);
+		}
+		catch (InterruptedException e)
+		{
+
+		}
 	}
 }

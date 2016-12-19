@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.api.server;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,22 +18,26 @@ package com.mobius.software.mqtt.performance.api.server;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.api.server;
+
 import java.net.URI;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-public class JerseyServer {
+public class JerseyServer
+{
 	private HttpServer server;
 
-	public JerseyServer(URI uri) {
-		final ResourceConfig rc = new ResourceConfig()
-				.packages("com.mobius.software.mqtt.performance.controller");
+	public JerseyServer(URI uri)
+	{
+		final ResourceConfig rc = new ResourceConfig().packages("com.mobius.software.mqtt.performance.controller");
 		server = GrizzlyHttpServerFactory.createHttpServer(uri, rc);
 	}
 
-	public void terminate() {
+	public void terminate()
+	{
 		server.shutdown();
 	}
 }

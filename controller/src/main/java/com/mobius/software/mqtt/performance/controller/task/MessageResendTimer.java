@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller.task;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,25 +18,27 @@ package com.mobius.software.mqtt.performance.controller.task;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.controller.task;
+
 import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
-import com.mobius.software.mqtt.performance.api.data.ConnectionContext;
-import com.mobius.software.mqtt.performance.api.data.IdentityReport;
 import com.mobius.software.mqtt.performance.controller.PeriodicQueuedTasks;
+import com.mobius.software.mqtt.performance.controller.client.ConnectionContext;
+import com.mobius.software.mqtt.performance.controller.client.IdentityReport;
 import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 
-public class MessageResendTimer implements Timer
+public class MessageResendTimer implements TimedTask
 {
 	private ConnectionContext ctx;
-	private PeriodicQueuedTasks<Timer> scheduler;
+	private PeriodicQueuedTasks<TimedTask> scheduler;
 	private NetworkHandler listener;
 	private MQMessage message;
 	private Long timestamp;
 	private Long resendInterval;
 	private IdentityReport report;
 
-	public MessageResendTimer(ConnectionContext ctx, PeriodicQueuedTasks<Timer> scheduler, NetworkHandler listener, MQMessage message, Long resendInterval, IdentityReport report)
+	public MessageResendTimer(ConnectionContext ctx, PeriodicQueuedTasks<TimedTask> scheduler, NetworkHandler listener, MQMessage message, Long resendInterval, IdentityReport report)
 	{
 		this.ctx = ctx;
 		this.scheduler = scheduler;

@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,15 +18,17 @@ package com.mobius.software.mqtt.performance.controller;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
+package com.mobius.software.mqtt.performance.controller;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.mobius.software.mqtt.performance.controller.task.MessageResendTimer;
-import com.mobius.software.mqtt.performance.controller.task.Timer;
+import com.mobius.software.mqtt.performance.controller.task.TimedTask;
 
-public class PeriodicQueuedTasks<T extends Timer>
+public class PeriodicQueuedTasks<T extends TimedTask>
 {
 	private ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>> queues = new ConcurrentHashMap<Long, ConcurrentLinkedQueue<T>>();
 	private LinkedBlockingQueue<T> mainQueue;

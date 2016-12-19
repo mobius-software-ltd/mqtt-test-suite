@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.api.json;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,17 +18,18 @@ package com.mobius.software.mqtt.performance.api.json;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import java.io.Serializable;
+package com.mobius.software.mqtt.performance.api.json;
+
 import java.util.List;
+import java.util.UUID;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
+import com.mobius.software.mqtt.performance.api.data.ClientController;
 import com.mobius.software.mqtt.performance.api.data.Scenario;
 
 @SuppressWarnings("serial")
-@XmlRootElement
-public class ScenarioRequest implements Serializable
+public class ScenarioRequest extends GenericJsonRequest
 {
+	private String requestUrl;
 	private List<Scenario> requests;
 
 	public ScenarioRequest()
@@ -59,5 +58,29 @@ public class ScenarioRequest implements Serializable
 			}
 		}
 		return requests != null && !requests.isEmpty();
+	}
+
+	public ScenarioRequest fillData(ClientController controller)
+	{
+		for (int i = 0; i < requests.size(); i++)
+		{
+			Scenario scenario = requests.get(i);
+			scenario.setId(UUID.randomUUID());
+			Integer scenarioDelay = controller.getScenarioDelays().get(i);
+			scenario.getProperties().setScenarioDelay(scenarioDelay);
+			scenario.getProperties().setIdentifierRegex(controller.getIdentifierRegex());
+			scenario.getProperties().setStartIdentifier(controller.getStartIdentifier());
+		}
+		return this;
+	}
+
+	public String retrieveURL()
+	{
+		return requestUrl;
+	}
+
+	public void updateURL(String url)
+	{
+		this.requestUrl = url;
 	}
 }

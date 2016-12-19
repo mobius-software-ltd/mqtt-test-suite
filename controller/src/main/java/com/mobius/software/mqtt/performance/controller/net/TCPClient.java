@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller.net;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,8 +18,7 @@ package com.mobius.software.mqtt.performance.controller.net;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
+package com.mobius.software.mqtt.performance.controller.net;
 
 import java.net.SocketAddress;
 import java.util.Iterator;
@@ -36,13 +33,16 @@ import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.performance.controller.client.MQTTException;
 
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+
 public class TCPClient implements NetworkHandler
 {
 	private static final Log logger = LogFactory.getLog(TCPClient.class);
 
 	private ConcurrentHashMap<SocketAddress, ClientBootstrap> bootstraps = new ConcurrentHashMap<>();
-	private ConcurrentHashMap<SocketAddress, Channel> clientChannels = new ConcurrentHashMap<SocketAddress, Channel>();
-	private ConcurrentHashMap<SocketAddress, ConnectionListener> clientListeners = new ConcurrentHashMap<SocketAddress, ConnectionListener>();
+	private ConcurrentHashMap<SocketAddress, Channel> clientChannels = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<SocketAddress, ConnectionListener> clientListeners = new ConcurrentHashMap<>();
 
 	public void init(SocketAddress serverAddress)
 	{
@@ -53,7 +53,6 @@ public class TCPClient implements NetworkHandler
 			{
 				bootstrap = new ClientBootstrap(clientListeners);
 				ClientBootstrap oldBootstrap = bootstraps.putIfAbsent(serverAddress, bootstrap);
-
 				if (oldBootstrap != null)
 					bootstrap = oldBootstrap;
 				else
@@ -64,7 +63,6 @@ public class TCPClient implements NetworkHandler
 		{
 			throw new MQTTException(MessageType.CONNECT, "An error occured while establishing network connection: " + e.getMessage());
 		}
-
 	}
 
 	public ChannelFuture connect(SocketAddress serverAddress)

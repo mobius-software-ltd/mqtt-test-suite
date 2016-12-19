@@ -1,5 +1,3 @@
-package com.mobius.software.mqtt.performance.controller.net;
-
 /**
  * Mobius Software LTD
  * Copyright 2015-2016, Mobius Software LTD
@@ -20,16 +18,18 @@ package com.mobius.software.mqtt.performance.controller.net;
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
+package com.mobius.software.mqtt.performance.controller.net;
 
 import java.net.SocketAddress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 
 public class ExceptionHandler extends ChannelDuplexHandler
 {
