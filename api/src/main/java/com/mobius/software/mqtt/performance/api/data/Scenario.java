@@ -23,9 +23,11 @@ package com.mobius.software.mqtt.performance.api.data;
 import java.util.List;
 import java.util.UUID;
 
+import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
 import com.mobius.software.mqtt.performance.commons.data.Command;
 
-public class Scenario
+@SuppressWarnings("serial")
+public class Scenario extends GenericJsonRequest
 {
 	private UUID id;
 	private ScenarioProperties properties;

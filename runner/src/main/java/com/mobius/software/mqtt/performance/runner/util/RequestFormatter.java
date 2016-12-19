@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.ws.rs.BadRequestException;
 
@@ -31,9 +32,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mobius.software.mqtt.performance.api.data.ClientController;
+import com.mobius.software.mqtt.performance.api.data.Scenario;
+import com.mobius.software.mqtt.performance.api.data.ScenarioRequest;
 import com.mobius.software.mqtt.performance.api.json.MultiScenarioData;
-import com.mobius.software.mqtt.performance.api.json.ScenarioRequest;
-import com.mobius.software.mqtt.performance.commons.data.PathSegment;
 import com.mobius.software.mqtt.performance.commons.util.URLBuilder;
 
 public class RequestFormatter
@@ -46,23 +47,21 @@ public class RequestFormatter
 			throw new BadRequestException("JSON file: one of the required fields is missing or invalid");
 
 		List<ScenarioRequest> requests = new ArrayList<>();
-		for (ClientController controller : multiScenarioData.getControllers())
+		List<ClientController> controllers = multiScenarioData.getControllers();
+		for (ClientController controller : controllers)
 		{
-			ScenarioRequest request = mapper.readValue(json, MultiScenarioData.class).getScenarioRequest().fillData(controller);
-			String requestUrl = URLBuilder.build(controller.getHostname(), controller.getPort(), PathSegment.CONTROLLER, PathSegment.SCENARIO);
-			request.updateURL(requestUrl);
-			requests.add(request);
+			String baseURL = URLBuilder.buildBaseURL(controller.getHostname(), controller.getPort());
+			for (ScenarioRequest request : controller.getRequests())
+			{
+				request.updateBaseURL(baseURL);
+				Scenario scenario = request.getScenario();
+				if (scenario.getId() == null)
+					scenario.setId(UUID.randomUUID());
+				scenario.getProperties().setIdentifierRegex(controller.getIdentifierRegex());
+				scenario.getProperties().setStartIdentifier(controller.getStartIdentifier());
+				requests.add(request);
+			}
 		}
 		return requests;
-	}
-
-	public static long parseRequestTimeout(File json) throws JsonParseException, JsonMappingException, IOException
-	{
-		ObjectMapper mapper = new ObjectMapper();
-		MultiScenarioData multiScenarioData = mapper.readValue(json, MultiScenarioData.class);
-		if (!multiScenarioData.validate())
-			throw new BadRequestException("JSON file: one of the required fields is missing or invalid");
-
-		return multiScenarioData.getRequestTimeout();
 	}
 }

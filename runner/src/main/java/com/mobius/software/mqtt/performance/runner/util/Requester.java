@@ -20,64 +20,43 @@
 
 package com.mobius.software.mqtt.performance.runner.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import com.mobius.software.mqtt.performance.api.data.Scenario;
 import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
-import com.mobius.software.mqtt.performance.api.json.ScenarioRequest;
 import com.mobius.software.mqtt.performance.api.json.UniqueIdentifierRequest;
 import com.mobius.software.mqtt.performance.commons.data.PathSegment;
 import com.mobius.software.mqtt.performance.commons.util.URLBuilder;
 import com.mobius.software.mqtt.performance.runner.JSONContainer;
-import com.mobius.software.mqtt.performance.runner.ScenarioData;
 
 public class Requester
 {
-	private static final Log logger = LogFactory.getLog(Requester.class);
-
-	public static List<ScenarioData> submitScenarios(ScenarioRequest request)
+	public static GenericJsonRequest sendScenario(String baseURL, Scenario request) throws Exception
 	{
-		List<ScenarioData> list = new ArrayList<>();
-		JSONContainer container = new JSONContainer(request.retrieveURL());
+		String requestURL = URLBuilder.build(baseURL, PathSegment.CONTROLLER, PathSegment.SCENARIO);
+		JSONContainer container = new JSONContainer(requestURL);
 		GenericJsonRequest response = null;
 		try
 		{
 			response = container.post(request);
 		}
-		catch (Exception e)
-		{
-			logger.error("AN ERROR OCCURED WHILE SENDING SCENARIO REQUEST:" + e.getMessage());
-			return list;
-		}
 		finally
 		{
 			container.release();
 		}
-		if (response.successful())
-			list.addAll(ScenarioData.translateAll(request));
-		else
-			logger.error("An error occured while submiting scenarios:" + response.getMessage());
-		return list;
+		return response;
 	}
 
-	public static ReportResponse requestReport(ScenarioData data)
+	public static ReportResponse requestReport(String baseURL, UUID id) throws Exception
 	{
-		String url = URLBuilder.build(data.getBaseURI(), PathSegment.CONTROLLER, PathSegment.REPORT);
-		UniqueIdentifierRequest request = new UniqueIdentifierRequest(data.getScenarioID());
-		JSONContainer container = new JSONContainer(url);
+		String requestURL = URLBuilder.build(baseURL, PathSegment.CONTROLLER, PathSegment.REPORT);
+		UniqueIdentifierRequest request = new UniqueIdentifierRequest(id);
+		JSONContainer container = new JSONContainer(requestURL);
 		ReportResponse report = null;
 		try
 		{
 			report = container.requestReport(request);
-		}
-		catch (Exception e)
-		{
-			logger.error("SCENARIO REPORT REQUEST FAILED:" + report.getMessage());
-			return report;
 		}
 		finally
 		{
@@ -86,26 +65,20 @@ public class Requester
 		return report;
 	}
 
-	public static void requestClear(ScenarioData data)
+	public static GenericJsonRequest requestClear(String baseURL, UUID id) throws Exception
 	{
-		String clearURL = URLBuilder.build(data.getBaseURI(), PathSegment.CONTROLLER, PathSegment.CLEAR);
-		UniqueIdentifierRequest request = new UniqueIdentifierRequest(data.getScenarioID());
-		JSONContainer container = new JSONContainer(clearURL);
+		String requestURL = URLBuilder.build(baseURL, PathSegment.CONTROLLER, PathSegment.CLEAR);
+		UniqueIdentifierRequest request = new UniqueIdentifierRequest(id);
+		JSONContainer container = new JSONContainer(requestURL);
 		GenericJsonRequest response = null;
 		try
 		{
 			response = container.post(request);
 		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			logger.error("SCENARIO CLEAR REQUEST FAILED:" + response.getMessage());
-		}
 		finally
 		{
 			container.release();
 		}
-		if (!response.successful())
-			logger.error("An error occured while clearing scenario:" + response.getMessage());
+		return response;
 	}
 }

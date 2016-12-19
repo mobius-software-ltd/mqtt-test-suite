@@ -30,17 +30,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.mobius.software.mqtt.performance.api.data.ClientReport;
 import com.mobius.software.mqtt.performance.api.data.Scenario;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
-import com.mobius.software.mqtt.performance.api.json.ScenarioRequest;
 import com.mobius.software.mqtt.performance.commons.data.CommandCounter;
 import com.mobius.software.mqtt.performance.commons.data.CommandType;
 import com.mobius.software.mqtt.performance.commons.data.Counter;
 import com.mobius.software.mqtt.performance.commons.data.Direction;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
-import com.mobius.software.mqtt.performance.commons.util.URLBuilder;
 
 public class ScenarioData
 {
-	private String baseURI;
 	private UUID scenarioID;
 	private Boolean status;
 	private long startTime;
@@ -56,40 +53,43 @@ public class ScenarioData
 	private Counter duplicatesIn = new Counter(0, Direction.INCOMING);
 	private Counter duplicatesOut = new Counter(0, Direction.OUTGOING);
 
-	public ScenarioData(String baseURI, UUID scenarioID, int totalClients, int totalCommands)
+	public ScenarioData(UUID scenarioID, Boolean status, long startTime, long finishTime, int totalClients, int totalCommands, int finishedClients, int failedClients, int finishedCommands, int failedCommands, int totalErrors, List<Counters> counters, Counter duplicatesIn, Counter duplicatesOut)
 	{
-		this.baseURI = baseURI;
 		this.scenarioID = scenarioID;
+		this.status = status;
+		this.startTime = startTime;
+		this.finishTime = finishTime;
 		this.totalClients = totalClients;
 		this.totalCommands = totalCommands;
+		this.finishedClients = finishedClients;
+		this.failedClients = failedClients;
+		this.finishedCommands = finishedCommands;
+		this.failedCommands = failedCommands;
+		this.totalErrors = totalErrors;
+		this.counters = counters;
+		this.duplicatesIn = duplicatesIn;
+		this.duplicatesOut = duplicatesOut;
 	}
 
-	public static List<ScenarioData> translateAll(ScenarioRequest request)
-	{
-		String baseURL = URLBuilder.retriveBaseURL(request.retrieveURL());
-		List<ScenarioData> list = new ArrayList<>();
-		for (Scenario scenario : request.getRequests())
-			list.add(ScenarioData.translate(baseURL, scenario));
-		return list;
-	}
-
-	public static ScenarioData translate(String baseURI, Scenario scenario)
+	public static ScenarioData translate(Scenario scenario, ReportResponse report)
 	{
 		UUID scenarioID = scenario.getId();
 		int totalClients = scenario.getCount();
 		int totalCommands = totalClients * CommandParser.retrieveCommands(scenario.getCommands()).size();
-		return new ScenarioData(baseURI, scenarioID, totalClients, totalCommands);
-	}
 
-	public ScenarioData parseReport(ReportResponse report)
-	{
-		this.startTime = report.getStartTime();
-		this.finishTime = report.getFinishTime();
-		this.status = true;
-		this.finishedClients = this.totalClients;
-		this.finishedCommands = this.totalCommands;
-		this.failedClients = 0;
-		this.failedCommands = 0;
+		long startTime = report.getStartTime();
+		long finishTime = report.getFinishTime();
+		boolean status = true;
+		int finishedClients = totalClients;
+		int finishedCommands = totalCommands;
+		int failedClients = 0;
+		int failedCommands = 0;
+		int totalErrors = 0;
+
+		Counter duplicatesIn = new Counter(0, Direction.INCOMING);
+		Counter duplicatesOut = new Counter(0, Direction.OUTGOING);
+
+		List<Counters> counters = new ArrayList<>();
 
 		Map<CommandType, AtomicInteger> incomingCounters = new LinkedHashMap<>();
 		Map<CommandType, AtomicInteger> outgoingCounters = new LinkedHashMap<>();
@@ -107,8 +107,8 @@ public class ScenarioData
 			if (unfinishedCommands > 0)
 			{
 				clientSuccessStatus = false;
-				this.finishedCommands -= unfinishedCommands;
-				this.failedCommands += unfinishedCommands;
+				finishedCommands -= unfinishedCommands;
+				failedCommands += unfinishedCommands;
 			}
 
 			if (!clientReport.getErrors().isEmpty())
@@ -141,14 +141,19 @@ public class ScenarioData
 
 			if (!clientSuccessStatus)
 			{
-				this.status = false;
-				this.finishedClients -= 1;
-				this.failedClients += 1;
+				status = false;
+				finishedClients -= 1;
+				failedClients += 1;
 			}
 		}
 
 		counters = translateCommandCounters(outgoingCounters, incomingCounters);
 
+		return new ScenarioData(scenarioID, status, startTime, finishTime, totalClients, totalCommands, finishedClients, failedClients, finishedCommands, failedCommands, totalErrors, counters, duplicatesIn, duplicatesOut);
+	}
+
+	public ScenarioData parseReport()
+	{
 		return this;
 	}
 
@@ -201,16 +206,6 @@ public class ScenarioData
 			}
 		}
 		return row;
-	}
-
-	public String getBaseURI()
-	{
-		return baseURI;
-	}
-
-	public void setBaseURI(String baseURI)
-	{
-		this.baseURI = baseURI;
 	}
 
 	public UUID getScenarioID()

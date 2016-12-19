@@ -23,16 +23,16 @@ package com.mobius.software.mqtt.performance.runner;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.mobius.software.mqtt.performance.api.json.ReportResponse;
-import com.mobius.software.mqtt.performance.api.json.ScenarioRequest;
+import com.mobius.software.mqtt.performance.api.data.ScenarioRequest;
 import com.mobius.software.mqtt.performance.runner.util.FileUtil;
-import com.mobius.software.mqtt.performance.runner.util.ReportBuilder;
 import com.mobius.software.mqtt.performance.runner.util.RequestFormatter;
-import com.mobius.software.mqtt.performance.runner.util.Requester;
 
 public class TestRunner
 {
@@ -43,33 +43,18 @@ public class TestRunner
 		try
 		{
 			File json = FileUtil.readFile(args[0]);
-
-			List<ScenarioData> scenarioData = new ArrayList<>();
+			List<RequestWorker> workers = new ArrayList<>();
 			List<ScenarioRequest> requests = RequestFormatter.parseScenarioRequests(json);
+			CountDownLatch latch = new CountDownLatch(requests.size());
 			for (ScenarioRequest request : requests)
-			{
-				List<ScenarioData> data = Requester.submitScenarios(request);
-				scenarioData.addAll(data);
-			}
-			if (scenarioData.isEmpty())
-				throw new IllegalStateException("ALL SCENARIO REQUESTS FAILED!");
+				workers.add(new RequestWorker(request, latch));
 
-			Thread.sleep(RequestFormatter.parseRequestTimeout(json));
-
-			for (ScenarioData data : scenarioData)
-			{
-				ReportResponse report = Requester.requestReport(data);
-				if (report != null && report.successful())
-				{
-					String summary = ReportBuilder.buildSummary(data.parseReport(report));
-					System.out.println(summary);
-
-					FileUtil.logErrors(data.getScenarioID(), report.getReports());
-					Requester.requestClear(data);
-				}
-				else
-					logger.error("An error occured while retrieving scenario report:" + report.getMessage());
-			}
+			ExecutorService service = Executors.newFixedThreadPool(workers.size());
+			for (RequestWorker worker : workers)
+				service.submit(worker);
+			latch.await();
+			
+			service.shutdownNow();
 		}
 		catch (Exception e)
 		{

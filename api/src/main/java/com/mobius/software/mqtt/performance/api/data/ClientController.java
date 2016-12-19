@@ -27,7 +27,7 @@ public class ClientController
 	private Integer port;
 	private String identifierRegex;
 	private Integer startIdentifier;
-	private List<Integer> scenarioDelays;
+	private List<ScenarioRequest> requests;
 
 	public ClientController()
 	{
@@ -74,14 +74,14 @@ public class ClientController
 		this.startIdentifier = startIdentifier;
 	}
 
-	public List<Integer> getScenarioDelays()
+	public List<ScenarioRequest> getRequests()
 	{
-		return scenarioDelays;
+		return requests;
 	}
 
-	public void setScenarioDelays(List<Integer> scenarioDelays)
+	public void setRequests(List<ScenarioRequest> requests)
 	{
-		this.scenarioDelays = scenarioDelays;
+		this.requests = requests;
 	}
 
 	public boolean validate()
@@ -89,12 +89,14 @@ public class ClientController
 		if (port == null || port < 1 || port > 65535)
 			return false;
 
-		if (scenarioDelays == null)
+		if (requests == null || requests.isEmpty())
 			return false;
 
-		for (Integer delay : scenarioDelays)
-			if (delay < 0)
+		for (ScenarioRequest request : requests)
+		{
+			if (!request.validate())
 				return false;
+		}
 
 		return hostname != null && identifierRegex != null && startIdentifier != null;
 	}

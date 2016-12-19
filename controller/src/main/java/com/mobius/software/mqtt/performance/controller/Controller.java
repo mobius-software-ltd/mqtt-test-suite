@@ -45,7 +45,6 @@ import com.mobius.software.mqtt.performance.api.data.Scenario;
 import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.api.json.ResponseData;
-import com.mobius.software.mqtt.performance.api.json.ScenarioRequest;
 import com.mobius.software.mqtt.performance.api.json.UniqueIdentifierRequest;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 import com.mobius.software.mqtt.performance.commons.util.IdentifierParser;
@@ -105,34 +104,31 @@ public class Controller
 	@Path("scenario")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public GenericJsonRequest scenario(ScenarioRequest json)
+	public GenericJsonRequest scenario(Scenario json)
 	{
 		if (!json.validate())
 			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
 
 		try
 		{
-			for (Scenario scenario : json.getRequests())
+			List<Client> clientList = new ArrayList<>();
+			OrchestratorProperties properties = OrchestratorProperties.fromScenarioProperties(json.getId(), json.getProperties(), json.getThreshold(), json.getStartThreshold(), json.getContinueOnError(), config.getInitialDelay());
+			Orchestrator orchestrator = new Orchestrator(properties, scheduler, clientList);
+			String username = CommandParser.retrieveUsername(json.getCommands());
+			listener.init(orchestrator.getProperties().getServerAddress());
+			for (int i = 0; i < json.getCount(); i++)
 			{
-				List<Client> clientList = new ArrayList<>();
-				OrchestratorProperties properties = OrchestratorProperties.fromScenarioProperties(scenario.getId(), scenario.getProperties(), scenario.getThreshold(), scenario.getStartThreshold(), scenario.getContinueOnError(), config.getInitialDelay());
-				Orchestrator orchestrator = new Orchestrator(properties, scheduler, clientList);
-				String username = CommandParser.retrieveUsername(scenario.getCommands());
-				listener.init(orchestrator.getProperties().getServerAddress());
-				for (int i = 0; i < scenario.getCount(); i++)
+				String clientID = null;
+				if (username != null)
 				{
-					String clientID = null;
-					if (username != null)
-					{
-						int identityCounter = identifierStorage.countIdentity(properties.getIdentifierRegex(), properties.getStartIdentifier());
-						clientID = IdentifierParser.parseIdentifier(properties.getIdentifierRegex(), username, properties.getServerHostname(), identityCounter);
-					}
-					Client client = new Client(clientID, orchestrator, listener, scenario.getCommands());
-					clientList.add(client);
+					int identityCounter = identifierStorage.countIdentity(properties.getIdentifierRegex(), properties.getStartIdentifier());
+					clientID = IdentifierParser.parseIdentifier(properties.getIdentifierRegex(), username, properties.getServerHostname(), identityCounter);
 				}
-				orchestrator.start();
-				scenarioMap.put(scenario.getId(), orchestrator);
+				Client client = new Client(clientID, orchestrator, listener, json.getCommands());
+				clientList.add(client);
 			}
+			orchestrator.start();
+			scenarioMap.put(json.getId(), orchestrator);
 			return new GenericJsonRequest(ResponseData.SUCCESS, null);
 		}
 		catch (Exception e)

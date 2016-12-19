@@ -27,32 +27,10 @@ import com.mobius.software.mqtt.performance.api.data.ClientController;
 public class MultiScenarioData
 {
 	private List<ClientController> controllers;
-	private Long requestTimeout;
-	private ScenarioRequest scenarioRequest;
 
 	public MultiScenarioData()
 	{
 
-	}
-
-	public ScenarioRequest getScenarioRequest()
-	{
-		return scenarioRequest;
-	}
-
-	public void setScenarioRequest(ScenarioRequest scenarioRequest)
-	{
-		this.scenarioRequest = scenarioRequest;
-	}
-
-	public Long getRequestTimeout()
-	{
-		return requestTimeout;
-	}
-
-	public void setRequestTimeout(Long requestTimeout)
-	{
-		this.requestTimeout = requestTimeout;
 	}
 
 	public List<ClientController> getControllers()
@@ -70,15 +48,11 @@ public class MultiScenarioData
 		if (controllers == null || controllers.isEmpty())
 			return false;
 
-		if (scenarioRequest == null || !scenarioRequest.validate())
-			return false;
 		for (ClientController controller : controllers)
 		{
 			if (!controller.validate())
 				return false;
-			if (controller.getScenarioDelays().size() != scenarioRequest.getRequests().size())
-				return false;
 		}
-		return requestTimeout != null;
+		return true;
 	}
 }
