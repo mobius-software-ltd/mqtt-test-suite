@@ -36,7 +36,7 @@ Each JSON file contains different test scenarios. Before the test run you should
 
 The test scenarios can be run in its current form. Besides you can change the existing test scenarios or add the new ones. Each JSON file can contain unlimited number of test scenarios.
 
-In order to start running the tests you should open the second terminal window and `cd` to performance_test folder. Now you can run the test by running the following command:
+In order to start running the tests you should open the second terminal window and `cd` to *performance_test* folder. Now you can run the test by running the following command:
 
 ```
 java -jar test-runner.jar ping.json
