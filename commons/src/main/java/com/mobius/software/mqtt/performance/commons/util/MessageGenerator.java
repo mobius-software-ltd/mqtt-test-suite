@@ -20,6 +20,9 @@
 
 package com.mobius.software.mqtt.performance.commons.util;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 import java.util.Random;
 
 public class MessageGenerator
@@ -27,11 +30,11 @@ public class MessageGenerator
 	private static final Random random = new Random();
 	private static final String CHARACTERS = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ1234567890";
 
-	public static byte[] generateContent(int messageSize)
+	public static ByteBuf generateContent(int messageSize)
 	{
 		char[] text = new char[messageSize];
 		for (int i = 0; i < messageSize; i++)
 			text[i] = CHARACTERS.charAt(random.nextInt(CHARACTERS.length()));
-		return new String(text).getBytes();
+		return Unpooled.buffer(text.length).writeBytes(new String(text).getBytes());
 	}
 }

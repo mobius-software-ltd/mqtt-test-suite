@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mobius.software.mqtt.performance.api.data.ClientReport;
+import com.mobius.software.mqtt.performance.api.data.Repeat;
 import com.mobius.software.mqtt.performance.api.data.Scenario;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.commons.data.CommandCounter;
@@ -75,7 +76,15 @@ public class ScenarioData
 	{
 		UUID scenarioID = scenario.getId();
 		int totalClients = scenario.getCount();
-		int totalCommands = totalClients * CommandParser.retrieveCommands(scenario.getCommands()).size();
+		int repeatCount = 1;
+		long repeatInterval = 0L;
+		Repeat repeat = scenario.getProperties().getRepeat();
+		if (repeat != null)
+		{
+			repeatCount = repeat.getCount();
+			repeatInterval = repeat.getInterval();
+		}
+		int totalCommands = totalClients * CommandParser.retrieveCommands(scenario.getCommands(), repeatCount, repeatInterval).size();
 
 		long startTime = report.getStartTime();
 		long finishTime = report.getFinishTime();

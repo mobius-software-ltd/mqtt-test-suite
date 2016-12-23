@@ -25,9 +25,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.mobius.software.mqtt.parser.MQParser;
 import com.mobius.software.mqtt.parser.header.api.CountableMessage;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
-import com.mobius.software.mqtt.parser.header.impl.Pingreq;
 import com.mobius.software.mqtt.parser.header.impl.Pubrel;
 import com.mobius.software.mqtt.performance.controller.PeriodicQueuedTasks;
 import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
@@ -81,13 +81,16 @@ public class TimersMap
 		scheduler.store(timer.getRealTimestamp(), timer);
 	}
 
-	public TimedTask store(Pubrel message)
+	public MessageResendTimer store(Pubrel message)
 	{
 		MessageResendTimer timer = new MessageResendTimer(ctx, scheduler, listener, message, ctx.getResendInterval(), report);
-		TimedTask oldTimer = timersMap.put(message.getPacketID(), timer);
+		MessageResendTimer oldTimer = timersMap.get(message.getPacketID());
 		if (oldTimer != null)
+		{
 			oldTimer.stop();
-		return timer;
+			timersMap.put(message.getPacketID(), timer);
+		}
+		return oldTimer;
 	}
 
 	public MessageResendTimer retrieveConnect()
@@ -133,7 +136,7 @@ public class TimersMap
 		if (ctx.getKeepalive() > 0)
 		{
 			if (this.ping == null)
-				this.ping = new MessageResendTimer(ctx, scheduler, listener, new Pingreq(), (long) ctx.getKeepalive() * 1000, report);
+				this.ping = new MessageResendTimer(ctx, scheduler, listener, MQParser.PINGREQ, (long) ctx.getKeepalive() * 1000, report);
 			else
 				this.ping.restart();
 

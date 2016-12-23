@@ -24,10 +24,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+
+import javassist.NotFoundException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,8 +35,6 @@ import org.apache.commons.logging.LogFactory;
 import com.mobius.software.mqtt.performance.api.data.ClientReport;
 import com.mobius.software.mqtt.performance.api.data.ErrorReport;
 import com.mobius.software.mqtt.performance.runner.TestRunner;
-
-import javassist.NotFoundException;
 
 public class FileUtil
 {
@@ -71,7 +69,7 @@ public class FileUtil
 				List<ErrorReport> errorReports = clientReport.getErrors();
 				if (!errorReports.isEmpty())
 				{
-					Collections.sort(errorReports, new Comparator<ErrorReport>()
+					/*Collections.sort(errorReports, new Comparator<ErrorReport>()
 					{
 						@Override
 						public int compare(ErrorReport o1, ErrorReport o2)
@@ -89,7 +87,7 @@ public class FileUtil
 							else
 								return -1;
 						}
-					});
+					});*/
 					String errorContent = ReportBuilder.buildError(clientReport.getIdentifier(), errorReports);
 					pw.println(errorContent);
 				}

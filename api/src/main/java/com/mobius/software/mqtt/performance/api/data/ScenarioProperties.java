@@ -29,13 +29,14 @@ public class ScenarioProperties
 	private Long minPingInterval;
 	private String identifierRegex;
 	private Integer startIdentifier;
+	private Repeat repeat;
 
 	public ScenarioProperties()
 	{
 
 	}
 
-	public ScenarioProperties(String serverHostname, Integer serverPort, Integer scenarioDelay, Long resendInterval, Long minPingInterval, String identifierRegex, Integer startIdentifer)
+	public ScenarioProperties(String serverHostname, Integer serverPort, Integer scenarioDelay, Long resendInterval, Long minPingInterval, String identifierRegex, Integer startIdentifer, Repeat repeat)
 	{
 		this.serverHostname = serverHostname;
 		this.serverPort = serverPort;
@@ -44,10 +45,13 @@ public class ScenarioProperties
 		this.minPingInterval = minPingInterval;
 		this.identifierRegex = identifierRegex;
 		this.startIdentifier = startIdentifer;
+		this.repeat = repeat;
 	}
 
 	public boolean validate()
 	{
+		if (repeat != null && !repeat.validate())
+			return false;
 		return serverHostname != null && serverPort != null && resendInterval != null && minPingInterval != null && identifierRegex != null && startIdentifier != null && scenarioDelay != null;
 	}
 
@@ -119,5 +123,15 @@ public class ScenarioProperties
 	public void setStartIdentifier(Integer startIdentifier)
 	{
 		this.startIdentifier = startIdentifier;
+	}
+
+	public Repeat getRepeat()
+	{
+		return repeat;
+	}
+
+	public void setRepeat(Repeat repeat)
+	{
+		this.repeat = repeat;
 	}
 }

@@ -27,7 +27,7 @@ import com.mobius.software.mqtt.parser.avps.MessageType;
 
 public enum ErrorType
 {
-	CONNECT(0), CONNACK(1), SUBSCRIBE(2), SUBACK(3), UNSUBSCRIBE(4), UNSUBACK(5), PUBLISH(6), PUBACK(7), PUBREC(8), PUBREL(9), PUBCOMP(10), PINGREQ(11), PINGRESP(12), DISCONNECT(13), CONNECTION_LOST(14), PREVIOUS_COMMAND_FAILED(15);
+	CONNECT(0), CONNACK(1), SUBSCRIBE(2), SUBACK(3), UNSUBSCRIBE(4), UNSUBACK(5), PUBLISH(6), PUBACK(7), PUBREC(8), PUBREL(9), PUBCOMP(10), PINGREQ(11), PINGRESP(12), DISCONNECT(13), CONNECTION_LOST(14), PREVIOUS_COMMAND_FAILED(15), DUPLICATE(16);
 
 	private static final Map<Integer, ErrorType> intToTypeMap = new HashMap<Integer, ErrorType>();
 	private static final Map<String, ErrorType> strToTypeMap = new HashMap<String, ErrorType>();

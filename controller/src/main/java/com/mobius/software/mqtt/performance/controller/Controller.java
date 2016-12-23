@@ -27,12 +27,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
@@ -41,11 +36,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.mobius.software.mqtt.performance.api.data.Repeat;
 import com.mobius.software.mqtt.performance.api.data.Scenario;
 import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.api.json.ResponseData;
 import com.mobius.software.mqtt.performance.api.json.UniqueIdentifierRequest;
+import com.mobius.software.mqtt.performance.commons.data.Command;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 import com.mobius.software.mqtt.performance.commons.util.IdentifierParser;
 import com.mobius.software.mqtt.performance.controller.client.Client;
@@ -116,6 +113,7 @@ public class Controller
 			Orchestrator orchestrator = new Orchestrator(properties, scheduler, clientList);
 			String username = CommandParser.retrieveUsername(json.getCommands());
 			listener.init(orchestrator.getProperties().getServerAddress());
+			Repeat repeat = json.getProperties().getRepeat();
 			for (int i = 0; i < json.getCount(); i++)
 			{
 				String clientID = null;
@@ -124,7 +122,15 @@ public class Controller
 					int identityCounter = identifierStorage.countIdentity(properties.getIdentifierRegex(), properties.getStartIdentifier());
 					clientID = IdentifierParser.parseIdentifier(properties.getIdentifierRegex(), username, properties.getServerHostname(), identityCounter);
 				}
-				Client client = new Client(clientID, orchestrator, listener, json.getCommands());
+				int repeatCount = 1;
+				long repeatInterval = 0L;
+				if (repeat != null)
+				{
+					repeatCount = repeat.getCount();
+					repeatInterval = repeat.getInterval();
+				}
+				ConcurrentLinkedQueue<Command> commands = CommandParser.retrieveCommands(json.getCommands(), repeatCount, repeatInterval);
+				Client client = new Client(clientID, orchestrator, listener, commands);
 				clientList.add(client);
 			}
 			orchestrator.start();

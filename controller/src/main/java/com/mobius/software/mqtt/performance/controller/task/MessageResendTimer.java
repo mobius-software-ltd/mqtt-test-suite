@@ -23,6 +23,7 @@ package com.mobius.software.mqtt.performance.controller.task;
 import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
+import com.mobius.software.mqtt.performance.api.data.ErrorType;
 import com.mobius.software.mqtt.performance.controller.PeriodicQueuedTasks;
 import com.mobius.software.mqtt.performance.controller.client.ConnectionContext;
 import com.mobius.software.mqtt.performance.controller.client.IdentityReport;
@@ -60,7 +61,10 @@ public class MessageResendTimer implements TimedTask
 		listener.send(ctx.localAddress(), message);
 		report.countOut(message.getType());
 		if (message.getType() != MessageType.PINGREQ)
+		{
 			report.countDuplicateOut();
+			report.reportError(ErrorType.DUPLICATE, message.getType() + " sent");
+		}
 		timestamp = System.currentTimeMillis() + resendInterval;
 		scheduler.store(timestamp, this);
 		return true;

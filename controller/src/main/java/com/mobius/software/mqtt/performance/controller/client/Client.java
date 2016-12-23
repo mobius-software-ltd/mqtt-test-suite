@@ -20,6 +20,7 @@
 
 package com.mobius.software.mqtt.performance.controller.client;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 
 import java.net.SocketAddress;
@@ -66,12 +67,12 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	private AtomicInteger failedCommands = new AtomicInteger(0);
 	private IdentityReport report;
 
-	public Client(String clientID, Orchestrator orchestrator, NetworkHandler listener, List<Command> commands)
+	public Client(String clientID, Orchestrator orchestrator, NetworkHandler listener, ConcurrentLinkedQueue<Command> commands)
 	{
 		this.clientID = clientID;
 		this.ctx = new ConnectionContext(orchestrator.getProperties().getServerAddress(), orchestrator.getProperties().getResendInterval());
 		this.listener = listener;
-		this.commands = CommandParser.retrieveCommands(commands);
+		this.commands = commands;
 		this.report = new IdentityReport(clientID);
 		this.timers = new TimersMap(ctx, orchestrator.getScheduler(), listener, report);
 		this.orchestrator = orchestrator;
@@ -116,13 +117,18 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 					nextCommand = commands.poll();
 					if (nextCommand != null)
 					{
-						if (firstIteration && !pendingCommand.compareAndSet(null, nextCommand))
+						if (firstIteration)
 						{
-							failedCommands.incrementAndGet();
-							if (!orchestrator.getProperties().isContinueOnError())
+							Command previous = pendingCommand.getAndSet(nextCommand);
+							if (previous != null)
 							{
-								listener.close(ctx.localAddress());
-								return false;
+								report.reportError(ErrorType.PREVIOUS_COMMAND_FAILED, previous.getType().toString());
+								failedCommands.incrementAndGet();
+								if (!orchestrator.getProperties().isContinueOnError())
+								{
+									listener.close(ctx.localAddress());
+									return false;
+								}
 							}
 						}
 
@@ -166,8 +172,11 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 						listener.send(ctx.localAddress(), message);
 
 						if (closeChannel)
+						{
+							status.set(false);
+							channelHandler.set(null);
 							listener.close(ctx.localAddress());
-
+						}
 						Command next = commands.peek();
 						if (next != null)
 							timestamp.addAndGet(next.getSendTime());
@@ -235,17 +244,13 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	{
 		MessageResendTimer timer = timers.remove(packetID);
 		if (timer == null || timer.retrieveMessage().getType() != MessageType.SUBSCRIBE)
-			throw new MQTTException(MessageType.SUBACK, "invalid packet identifier");
-
+			report.reportError(ErrorType.SUBACK, "invalid packet identifier");
 		timers.restartPing();
 
 		Subscribe subscribe = (Subscribe) timer.retrieveMessage();
-		if (subscribe == null)
-			throw new MQTTException(MessageType.SUBACK, "received SUBACK with unexpected packetID");
-
 		Topic[] topics = subscribe.getTopics();
 		if (topics.length != codes.size())
-			throw new MQTTException(MessageType.SUBACK, "Invalid codes length: " + codes.size() + ", expected" + topics.length);
+			report.reportError(ErrorType.SUBACK, "Invalid codes length: " + codes.size() + ", expected" + topics.length);
 
 		pendingCommand.set(null);
 	}
@@ -255,23 +260,20 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	{
 		MessageResendTimer timer = timers.remove(packetID);
 		if (timer == null || timer.retrieveMessage().getType() != MessageType.UNSUBSCRIBE)
-			throw new MQTTException(MessageType.UNSUBACK, "invalid packet identifier");
+			report.reportError(ErrorType.UNSUBACK, "invalid packet identifier");
 
 		timers.restartPing();
-
-		Unsubscribe unsub = (Unsubscribe) timer.retrieveMessage();
-		if (unsub == null)
-			throw new MQTTException(MessageType.UNSUBACK, "received UNSUBACK with unexpected packetID");
-
 		pendingCommand.set(null);
 	}
 
 	@Override
-	public void processPublish(Integer packetID, Topic topic, byte[] content, boolean retain, boolean isDup)
+	public void processPublish(Integer packetID, Topic topic, ByteBuf content, boolean retain, boolean isDup)
 	{
 		if (isDup)
+		{
 			report.countDuplicateIn();
-
+			report.reportError(ErrorType.DUPLICATE, "PUBLISH received");
+		}
 		MQMessage response = null;
 		switch (topic.getQos())
 		{
@@ -299,22 +301,19 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	{
 		MessageResendTimer timer = timers.remove(packetID);
 		if (timer == null || timer.retrieveMessage().getType() != MessageType.PUBLISH)
-			throw new MQTTException(MessageType.PUBACK, "invalid packet identifier");
+			report.reportError(ErrorType.PUBACK, "invalid packet identifier");
 
 		timers.restartPing();
-		timers.remove(packetID);
 		pendingCommand.set(null);
 	}
 
 	@Override
 	public void processPubrec(Integer packetID)
 	{
-		MessageResendTimer timer = timers.remove(packetID);
-		if (timer == null || timer.retrieveMessage().getType() != MessageType.PUBLISH)
-			throw new MQTTException(MessageType.PUBREC, "invalid packet identifier");
-
 		Pubrel pubrel = new Pubrel(packetID);
-		timers.store(pubrel);
+		MessageResendTimer oldTimer = timers.store(pubrel);
+		if (oldTimer == null || oldTimer.retrieveMessage().getType() != MessageType.PUBLISH)
+			report.reportError(ErrorType.PUBREC, "invalid packet identifier");
 		listener.send(ctx.localAddress(), pubrel);
 		report.countOut(pubrel.getType());
 		pendingCommand.set(null);
@@ -334,7 +333,7 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	{
 		MessageResendTimer timer = timers.remove(packetID);
 		if (timer == null || timer.retrieveMessage().getType() != MessageType.PUBREL)
-			throw new MQTTException(MessageType.PUBCOMP, "invalid packet identifier");
+			report.reportError(ErrorType.PUBCOMP, "invalid packet identifier");
 
 		pendingCommand.set(null);
 	}
@@ -352,38 +351,41 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	@Override
 	public void processConnect(boolean cleanSession, int keepalive, Will will)
 	{
-		throw new MQTTException(MessageType.CONNECT, "Received invalid message from broker");
+		report.reportError(ErrorType.CONNECT, "Received invalid message from broker");
 	}
 
 	@Override
 	public void processSubscribe(Integer packetID, Topic[] topics)
 	{
-		throw new MQTTException(MessageType.SUBSCRIBE, "Received invalid message from broker");
+		report.reportError(ErrorType.SUBSCRIBE, "Received invalid message from broker");
 	}
 
 	@Override
 	public void processUnsubscribe(Integer packetID, Text[] topics)
 	{
-		throw new MQTTException(MessageType.UNSUBSCRIBE, "Received invalid message from broker");
+		report.reportError(ErrorType.UNSUBSCRIBE, "Received invalid message from broker");
 	}
 
 	@Override
 	public void processPingreq()
 	{
-		throw new MQTTException(MessageType.PINGREQ, "Received invalid message from broker");
+		report.reportError(ErrorType.PINGREQ, "Received invalid message from broker");
 	}
 
 	@Override
 	public void processDisconnect()
 	{
-		throw new MQTTException(MessageType.DISCONNECT, "Received invalid message from broker");
+		report.reportError(ErrorType.DISCONNECT, "Received invalid message from broker");
 	}
 
 	@Override
 	public void connectionDown(SocketAddress address)
 	{
-		report.reportError(ErrorType.CONNECTION_LOST, "connection closed:" + address);
-		timers.stopAllTimers();
+		if (status.get())
+		{
+			report.reportError(ErrorType.CONNECTION_LOST, "connection closed:" + address);
+			timers.stopAllTimers();
+		}
 	}
 
 	@Override
@@ -414,6 +416,10 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 		int commandsCount = commands.size() + failedCommands.get();
 		if (pendingCommand.get() != null)
 			commandsCount++;
+
+		if (commandsCount > 0)
+			System.out.println("clientID:" + clientID + ",address:" + ctx.localAddress() + "failed:" + failedCommands.get());
+
 		report.setUnfinishedCommands(commandsCount);
 		return report;
 	}

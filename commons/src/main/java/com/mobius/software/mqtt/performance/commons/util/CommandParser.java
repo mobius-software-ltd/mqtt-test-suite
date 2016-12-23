@@ -20,6 +20,8 @@
 
 package com.mobius.software.mqtt.performance.commons.util;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -141,7 +143,7 @@ public class CommandParser
 			return new Connect(username, password, clientID, cleanSession, keepalive, null);
 
 		case DISCONNECT:
-			return MQParser.DISCONNECT_MESSAGE;
+			return MQParser.DISCONNECT;
 
 		case PUBLISH:
 			Text publishTopicName = new Text(propertyMap.get(PropertyType.TOPIC));
@@ -150,8 +152,8 @@ public class CommandParser
 			Boolean retain = Boolean.parseBoolean(propertyMap.get(PropertyType.RETAIN));
 			Boolean dup = Boolean.parseBoolean(propertyMap.get(PropertyType.DUPLICATE));
 			int messageSize = Integer.parseInt(propertyMap.get(PropertyType.MESSAGE_SIZE));
-			byte[] content = MessageGenerator.generateContent(messageSize);
-			return new Publish(publishTopic, content, retain, dup);
+			ByteBuf content = MessageGenerator.generateContent(messageSize);
+			return new Publish(null, publishTopic, content, retain, dup);
 
 		case SUBSCRIBE:
 			Text subscribeTopicName = new Text(propertyMap.get(PropertyType.TOPIC));
@@ -170,26 +172,30 @@ public class CommandParser
 		}
 	}
 
-	public static ConcurrentLinkedQueue<Command> retrieveCommands(List<Command> commands)
+	public static ConcurrentLinkedQueue<Command> retrieveCommands(List<Command> commands, int repeatCount, long repeatInterval)
 	{
 		ConcurrentLinkedQueue<Command> queue = new ConcurrentLinkedQueue<>();
-		for (Command command : commands)
+		long currInterval = 0L;
+		while (repeatCount-- > 0)
 		{
-			queue.offer(command);
-
-			if (command.getType() == CommandType.PUBLISH)
+			for (int i = 0; i < commands.size(); i++)
 			{
-				Integer count = retrieveIntegerProperty(command, PropertyType.COUNT);
-				if (count > 1)
+				Command command = commands.get(i);
+				if (i == 0)
+					command = new Command(command.getType(), command.getSendTime() + currInterval, command.getCommandProperties());
+				queue.offer(command);
+				if (command.getType() == CommandType.PUBLISH)
 				{
 					long resendTime = retrieveIntegerProperty(command, PropertyType.RESEND_TIME);
-					for (int i = 1; i < count; i++)
+					Integer count = retrieveIntegerProperty(command, PropertyType.COUNT);
+					while (count-- > 1)
 					{
 						Command publish = new Command(command.getType(), resendTime, command.getCommandProperties());
 						queue.offer(publish);
 					}
 				}
 			}
+			currInterval = repeatInterval;
 		}
 		return queue;
 	}

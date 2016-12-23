@@ -20,15 +20,15 @@
 
 package com.mobius.software.mqtt.performance.controller.net;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+
 import java.util.List;
 
 import com.mobius.software.mqtt.parser.MQParser;
 import com.mobius.software.mqtt.parser.exceptions.MalformedMessageException;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
 
 public class Decoder extends ByteToMessageDecoder
 {

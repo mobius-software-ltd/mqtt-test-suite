@@ -63,21 +63,53 @@ public class ReportBuilder
 		long currTime = System.currentTimeMillis();
 		TableBuilder builder = new TableBuilder().width(TABLE_WIDTH);
 
-		builder.addHeader(Cell.center(ID).addValue(0, data.getScenarioID()).addValue(10, data.getStatus() ? RESULT_SUCCESS : RESULT_FAILED));
+		builder.addHeader(
+				Cell.center(ID)
+				.addValue(0, data.getScenarioID())
+				.addValue(10, data.getStatus() ? RESULT_SUCCESS : RESULT_FAILED));
 
-		builder.addRow(Cell.left(START_TIME), Cell.left(timestampToDateTime(data.getStartTime())), Cell.left(data.getStartTime()));
-		builder.addRow(Cell.left(FINISH_TIME), Cell.left(timestampToDateTime(data.getFinishTime())), Cell.left(data.getFinishTime()));
-		builder.addRow(Cell.left(CURRENT_TIME), Cell.left(timestampToDateTime(currTime)), Cell.left(currTime));
+		builder.addRow(
+				Cell.left(START_TIME), 
+				Cell.left(timestampToDateTime(data.getStartTime())), 
+				Cell.left(data.getStartTime()));
+		builder.addRow(
+				Cell.left(FINISH_TIME), 
+				Cell.left(timestampToDateTime(data.getFinishTime())), 
+				Cell.left(data.getFinishTime()));
+		builder.addRow(
+				Cell.left(CURRENT_TIME), 
+				Cell.left(timestampToDateTime(currTime)), 
+				Cell.left(currTime));
 		builder.addFooter(3);
 
-		builder.addRow(Cell.left(TOTAL_CLIENTS).addLast(data.getTotalClients()), Cell.left(TOTAL_COMMANDS).addLast(data.getTotalCommands()), Cell.left(TOTAL_ERRORS).addLast(data.getTotalErrors()));
-		builder.addRow(Cell.left(SUCCESSFULY_FINISHED).addLast(data.getFinishedClients()), Cell.left(SUCCESSFULY_FINISHED).addLast(data.getFinishedCommands()), Cell.left(DUPLICATES_IN).addLast(data.getDuplicatesIn().getCount()));
-		builder.addRow(Cell.left(FAILED).addLast(data.getFailedClients()), Cell.left(FAILED).addLast(data.getFailedCommands()), Cell.left(DUPLICATES_OUT).addLast(data.getDuplicatesOut().getCount()));
+		builder.addRow(
+				Cell.left(TOTAL_CLIENTS).addLast(data.getTotalClients()), 
+				Cell.left(TOTAL_COMMANDS).addLast(data.getTotalCommands()),
+				Cell.left(TOTAL_ERRORS).addLast(data.getTotalErrors()));
+		builder.addRow(
+				Cell.left(SUCCESSFULY_FINISHED).addLast(data.getFinishedClients()),
+				Cell.left(SUCCESSFULY_FINISHED).addLast(data.getFinishedCommands()),
+				Cell.left(DUPLICATES_IN).addLast(data.getDuplicatesIn().getCount()));
+		builder.addRow(
+				Cell.left(FAILED).addLast(data.getFailedClients()), 
+				Cell.left(FAILED).addLast(data.getFailedCommands()), 
+				Cell.left(DUPLICATES_OUT).addLast(data.getDuplicatesOut().getCount()));
 
-		builder.addHeader(Cell.center(OUTGOING_COUNTERS), Cell.center(INCOMING_COUNTERS));
-		builder.addRow(Cell.center(COUNTER_NAME), Cell.center(COUNTER_VALUE), Cell.center(COUNTER_NAME), Cell.center(COUNTER_VALUE));
+		builder.addHeader(
+				Cell.center(OUTGOING_COUNTERS), 
+				Cell.center(INCOMING_COUNTERS));
+		builder.addRow(
+				Cell.center(COUNTER_NAME), 
+				Cell.center(COUNTER_VALUE), 
+				Cell.center(COUNTER_NAME), 
+				Cell.center(COUNTER_VALUE));
 		for (Counters counters : data.getCounters())
-			builder.addRow(Cell.center(counters.getOut().getCommand()), Cell.center(counters.getOut().getCount()), Cell.center(counters.getIn().getCommand()), Cell.center(counters.getIn().getCount()));
+		{
+			builder.addRow(Cell.center(counters.getOut().getCommand()), 
+					Cell.center(counters.getOut().getCount()), 
+					Cell.center(counters.getIn().getCommand()), 
+					Cell.center(counters.getIn().getCount()));
+		}
 		builder.addFooter(4);
 
 		return builder.build();
@@ -91,7 +123,13 @@ public class ReportBuilder
 		builder.addRow(Cell.center(TIME), Cell.center(MESSAGE));
 		builder.addFooter(2);
 		for (ErrorReport errorReport : clientErrors)
-			builder.addRow(Cell.left(timestampToDateTime(errorReport.getTimestamp())).addValue(4, errorReport.getTimestamp()), Cell.left(errorReport.getMessage()).addValue(0, errorReport.getType()));
+		{
+			builder.addRow(
+					Cell.left(timestampToDateTime(errorReport.getTimestamp()))
+					.addValue(4, errorReport.getTimestamp()), 
+					Cell.left(errorReport.getType())
+					.addValue(0, errorReport.getMessage()));
+		}
 		builder.addFooter(2);
 		return builder.build();
 	}
