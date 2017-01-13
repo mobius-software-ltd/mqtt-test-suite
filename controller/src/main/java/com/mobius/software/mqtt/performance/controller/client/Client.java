@@ -120,7 +120,7 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 						if (firstIteration)
 						{
 							Command previous = pendingCommand.getAndSet(nextCommand);
-							if (previous != null)
+							if (previous != null && nextCommand.getSendTime() > 0)
 							{
 								report.reportError(ErrorType.PREVIOUS_COMMAND_FAILED, previous.getType().toString());
 								failedCommands.incrementAndGet();
