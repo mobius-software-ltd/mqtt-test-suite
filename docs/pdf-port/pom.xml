@@ -1,0 +1,34 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.mobius.software.mqtt</groupId>
+	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>pdf-port</artifactId>
+	<name>pdf-port</name>
+	<description>PDF Driver porting to maven</description>
+
+	<properties>
+		<groupId>org.asciidoctor</groupId>
+		<artifactId>asciidoctorj-pdf</artifactId>
+		<version>1.5.0-alpha.11111</version>
+		<packaging>jar</packaging>
+		<file>asciidoctorj-pdf.jar</file>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
