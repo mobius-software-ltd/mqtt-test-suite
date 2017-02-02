@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.mobius.software.mqtt</groupId>
+	<groupId>com.mobius-software.mqtt</groupId>
 	<artifactId>controller</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>controller</name>
@@ -28,12 +28,12 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.mobius.software.mqtt</groupId>
+			<groupId>com.mobius-software.mqtt</groupId>
 			<artifactId>commons</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.mobius.software.mqtt</groupId>
+			<groupId>com.mobius-software.mqtt</groupId>
 			<artifactId>api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
@@ -55,7 +55,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.mobius.software.mqtt.performance.controller.ControllerRunner</mainClass>
+							<mainClass>com.mobius-software.mqtt.performance.controller.ControllerRunner</mainClass>
 						</manifest>
 					</archive>
 					<finalName>controller</finalName>

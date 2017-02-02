@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.mobius.software.mqtt</groupId>
+	<groupId>com.mobius-software.mqtt</groupId>
 	<artifactId>runner</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>MQTT Performance test runner</name>
@@ -26,13 +26,13 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.mobius.software.mqtt</groupId>
+			<groupId>com.mobius-software.mqtt</groupId>
 			<artifactId>api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.mobius.software.mqtt</groupId>
+			<groupId>com.mobius-software.mqtt</groupId>
 			<artifactId>commons</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>compile</scope>
@@ -62,7 +62,7 @@
 					<finalName>runner</finalName>
 					<archive>
 						<manifest>
-							<mainClass>com.mobius.software.mqtt.performance.runner.TestRunner</mainClass>
+							<mainClass>com.mobius-software.mqtt.performance.runner.TestRunner</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
