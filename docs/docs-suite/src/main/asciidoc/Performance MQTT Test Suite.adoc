@@ -25,11 +25,11 @@ Then you have to build the project. For this purpose, open the Performance Test 
 Then you should again right-click *mqtt-test-suite* and go to _Run As / Maven clean_. Finally you should right-click *mqtt-test-suite* and go to _Run As / Maven install_.
 
 Now you have the controller (in _mqtt-test-suite/controller/target_ folder) and the test runner (in _mqtt-test-suite/runner/target_ folder) jar files on your computer.
-To make the work more convenient, create performance_test folder which will contain controller-jar-with-dependencies.jar and runner-jar-with-dependencies.jar.
-Also you should add JSON files to this very performance_test folder and controller.params file (you can find it _mqtt-test-suite/controller_ folder).
+To make the work more convenient, create _performance_test_ folder which will contain `controller-jar-with-dependencies.jar` and `runner-jar-with-dependencies.jar`.
+Also you should add JSON files to this very _performance_test_ folder and `controller.params` file (you can find it _mqtt-test-suite/controller_ folder).
 
 == Test run
-First you should open the terminal and `cd` to performance_test folder. You should start the controller by running the command which is given below (do not forget to indicate your path):
+First you should open the terminal and `cd` to _performance_test_ folder. You should start the controller by running the command which is given below (do not forget to indicate your path):
 
 [source,bash]
 ----
@@ -42,13 +42,13 @@ Here is a brief explanation:
 
 *Xms512m* – initial memory allocation;
 
-*controller.jar* – controller which is inside the performance_test folder;
+*controller.jar* – controller which is inside the _performance_test_ folder;
 
 *http://192.168.1.1:9998/* - IP address and port of controller;
 
 */home/username/performance_test/controller.params* – path to controller.params file.
 
-You should open the second terminal window and `cd` to performance_test folder. Now you can run the test by running the following command:
+You should open the second terminal window and `cd` to _performance_test_ folder. Now you can run the test by running the following command:
 
 [source,bash]
 ----
