@@ -1,0 +1,248 @@
+{
+  "controllers": [
+    {
+      "hostname": "192.168.0.1",
+      "port": 9998,
+      "identifierRegex": "%server%identity%",
+      "startIdentifier": 1,
+      "requests": [
+        {
+          "requestTimeout": 320000,
+          "scenario": {
+            "id": null,
+            "properties": {
+              "serverHostname": "192.168.0.2",
+              "serverPort": 1883,
+              "scenarioDelay": 0,
+              "resendInterval": 3000,
+              "minPingInterval": 10000,
+              "identifierRegex": "%server%identity%",
+              "startIdentifier": 1
+            },
+            "count": 1,
+            "threshold": 100000,
+            "startThreshold": 500,
+            "continueOnError": true,
+            "commands": [
+              {
+                "type": "CONNECT",
+                "sendTime": 0,
+                "commandProperties": [
+                  {
+                    "type": "USERNAME",
+                    "value": "foo@bar.net"
+                  },
+                  {
+                    "type": "PASSWORD",
+                    "value": "password"
+                  },
+                  {
+                    "type": "CLEAN_SESSION",
+                    "value": "true"
+                  },
+                  {
+                    "type": "KEEPALIVE",
+                    "value": "10"
+                  }
+                ]
+              },
+              {
+                "type": "SUBSCRIBE",
+                "sendTime": 1000,
+                "commandProperties": [
+                  {
+                    "type": "TOPIC",
+                    "value": "performance/test"
+                  },
+                  {
+                    "type": "QOS",
+                    "value": "2"
+                  }
+                ]
+              },
+              {
+                "type": "UNSUBSCRIBE",
+                "sendTime": 310000,
+                "commandProperties": [
+                  {
+                    "type": "TOPIC",
+                    "value": "performance/test"
+                  }
+                ]
+              },
+              {
+                "type": "DISCONNECT",
+                "sendTime": 1000,
+                "commandProperties": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "hostname": "192.168.0.3",
+      "port": 9998,
+      "identifierRegex": "%server%identity%",
+      "startIdentifier": 2,
+      "requests": [
+        {
+          "requestTimeout": 310000,
+          "scenario": {
+            "id": null,
+            "properties": {
+              "serverHostname": "192.168.0.4",
+              "serverPort": 1883,
+              "scenarioDelay": 0,
+              "resendInterval": 3000,
+              "minPingInterval": 10000,
+              "identifierRegex": "%server%identity%",
+              "startIdentifier": 1
+            },
+            "count": 500,
+            "threshold": 100000,
+            "startThreshold": 500,
+            "continueOnError": true,
+            "commands": [
+              {
+                "type": "CONNECT",
+                "sendTime": 0,
+                "commandProperties": [
+                  {
+                    "type": "USERNAME",
+                    "value": "foo@bar.net"
+                  },
+                  {
+                    "type": "PASSWORD",
+                    "value": "password"
+                  },
+                  {
+                    "type": "CLEAN_SESSION",
+                    "value": "true"
+                  },
+                  {
+                    "type": "KEEPALIVE",
+                    "value": "10"
+                  }
+                ]
+              },
+              {
+                "type": "PUBLISH",
+                "sendTime": 3000,
+                "commandProperties": [
+                  {
+                    "type": "TOPIC",
+                    "value": "performance/test"
+                  },
+                  {
+                    "type": "QOS",
+                    "value": "2"
+                  },
+                  {
+                    "type": "COUNT",
+                    "value": "300"
+                  },
+                  {
+                    "type": "RESEND_TIME",
+                    "value": 1000
+                  },
+                  {
+                    "type": "MESSAGE_SIZE",
+                    "value": 8192
+                  }
+                ]
+              },
+              {
+                "type": "DISCONNECT",
+                "sendTime": 1000,
+                "commandProperties": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "hostname": "192.168.0.5",
+      "port": 9998,
+      "identifierRegex": "%server%identity%",
+      "startIdentifier": 502,
+      "requests": [
+        {
+          "requestTimeout": 310000,
+          "scenario": {
+            "id": null,
+            "properties": {
+              "serverHostname": "192.168.0.6",
+              "serverPort": 1883,
+              "scenarioDelay": 0,
+              "resendInterval": 3000,
+              "minPingInterval": 10000,
+              "identifierRegex": "%server%identity%",
+              "startIdentifier": 1
+            },
+            "count": 500,
+            "threshold": 100000,
+            "startThreshold": 500,
+            "continueOnError": true,
+            "commands": [
+              {
+                "type": "CONNECT",
+                "sendTime": 0,
+                "commandProperties": [
+                  {
+                    "type": "USERNAME",
+                    "value": "foo@bar.net"
+                  },
+                  {
+                    "type": "PASSWORD",
+                    "value": "password"
+                  },
+                  {
+                    "type": "CLEAN_SESSION",
+                    "value": "true"
+                  },
+                  {
+                    "type": "KEEPALIVE",
+                    "value": "10"
+                  }
+                ]
+              },
+              {
+                "type": "PUBLISH",
+                "sendTime": 3000,
+                "commandProperties": [
+                  {
+                    "type": "TOPIC",
+                    "value": "performance/test"
+                  },
+                  {
+                    "type": "QOS",
+                    "value": "2"
+                  },
+                  {
+                    "type": "COUNT",
+                    "value": "300"
+                  },
+                  {
+                    "type": "RESEND_TIME",
+                    "value": 1000
+                  },
+                  {
+                    "type": "MESSAGE_SIZE",
+                    "value": 8192
+                  }
+                ]
+              },
+              {
+                "type": "DISCONNECT",
+                "sendTime": 1000,
+                "commandProperties": null
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
