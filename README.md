@@ -100,6 +100,6 @@ Each JSON file contains different test scenarios. You can separately run each te
 ```
 Each test can be run in its current form.
 Besides you can change the existing test scenarios or add the new ones.
-The information given [here](https://github.com/mobius-software-ltd/mqtt-test-suite/blob/master/docs/docs-suite/src/main/asciidoc/Pipeline%20Test%20Scenario%20Parameters%20.adoc) will help you to get into these test requests. If you are interested in making considerable changes, the [The Structure of Performance Test Suite](https://github.com/mobius-software-ltd/mqtt-test-suite/blob/master/docs/docs-suite/src/main/asciidoc/The%20Structure%20of%20Performance%20Test%20Suite.adoc) will help you to get into the structure of this test suite.
+The information given [here](https://github.com/mobius-software-ltd/mqtt-test-suite/blob/master/docs/docs-suite/src/main/asciidoc/Pipeline%20Test%20Scenario%20Parameters%20.adoc) will help you to get into these test requests. If you are interested in making considerable changes, the [Structure of Performance Test Suite](https://github.com/mobius-software-ltd/mqtt-test-suite/blob/master/docs/docs-suite/src/main/asciidoc/The%20Structure%20of%20Performance%20Test%20Suite.adoc) will help you to get into the structure of this test suite.
 ## [License](LICENSE.md)
 
