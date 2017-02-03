@@ -4,13 +4,12 @@ Last update: 01.11.2016
 :toc:
 :title-logo-image: images/logo_stripe.png
 
-== Pipeline Test Scenario Parameters
 The structure of all JSON files is similar except for the test scenario itself.
 We will explain you in detail everything regarding the test parameters, so you will be able to customize these tests. As an example we took pipeline.json which can be found https://github.com/mobius-software-ltd/mqtt-test-suite/blob/master/docs/docs-suite/src/main/asciidoc/samples/pipeline.json[here].
 
 == "Controllers" object
 
-_`controllers` is a common part for all test scenarios, which means that you do not have to separately specify it for each test scenario in one JSON file. It contains IP address and port of controller (`hostname` and `port`), `identifierRegex` and `startIdentifier` parameters. Usually only one controller is used, however it is possible to involve several controllers and set their parameters (hostname, port, `identifierRegex` and `startIdentifier`) in the form of array of objects.
+`controllers` is a common part for all test scenarios, which means that you do not have to separately specify it for each test scenario in one JSON file. It contains IP address and port of controller (`hostname` and `port`), `identifierRegex` and `startIdentifier` parameters. Usually only one controller is used, however it is possible to involve several controllers and set their parameters (hostname, port, `identifierRegex` and `startIdentifier`) in the form of array of objects.
 
 `identifierRegex` is responsible for the forming of unique and valid identifiers of clients.
 
