@@ -9,9 +9,9 @@ We will explain you in detail everything regarding the test parameters, so you w
 
 == "Controllers" object
 
-`controllers` is a common part for all test scenarios, which means that you do not have to separately specify it for each test scenario in one JSON file. It contains IP address and port of controller (`hostname` and `port`), `identifierRegex` and `startIdentifier` parameters. Usually only one controller is used, however it is possible to involve several controllers and set their parameters (hostname, port, `identifierRegex` and `startIdentifier`) in the form of array of objects.
+*`controllers`* is a common part for all test scenarios, which means that you do not have to separately specify it for each test scenario in one JSON file. It contains IP address and port of controller (`hostname` and `port`), `identifierRegex` and `startIdentifier` parameters. Usually only one controller is used, however it is possible to involve several controllers and set their parameters (hostname, port, `identifierRegex` and `startIdentifier`) in the form of array of objects.
 
-`identifierRegex` is responsible for the forming of unique and valid identifiers of clients.
+*`identifierRegex`* is responsible for the forming of unique and valid identifiers of clients.
 
 [small]*_How is ID formed?_*
 
@@ -35,44 +35,44 @@ _[small]#It will create ID containing username and corresponding integer.#_
 
 _[small]#Besides you can set "%server%account%identity%" value. The order of “identity”, “server” and “account” can be different. But indication of “identity” will always be required.#_
 
-`startIdentifier` indicates the initial integer which will be used for ID.
+*`startIdentifier`* indicates the initial integer which will be used for ID.
 
 == "Requests" object
 
-`requests` is an object which contains one or several test scenarios. The number of test scenarios is not limited. Pay attention that the parameters mentioned here (`requestTimeout`, `scenarioDelay`, `count`, `commands`, etc.) should be separately indicated for each test scenario.
+*`requests`* is an object which contains one or several test scenarios. The number of test scenarios is not limited. Pay attention that the parameters mentioned here (`requestTimeout`, `scenarioDelay`, `count`, `commands`, etc.) should be separately indicated for each test scenario.
 
-`requestTimeout` is a time period which is set for the running of the whole test. It is necessary to make sure that it is higher than total amount of `sendTime` values in a particular test scenario. Besides `requestTimeout` should not have the equal value with
+*`requestTimeout`* is a time period which is set for the running of the whole test. It is necessary to make sure that it is higher than total amount of `sendTime` values in a particular test scenario. Besides `requestTimeout` should not have the equal value with
 
-`sendTime` which is set for DISCONNECT packet, since the processing of DISCONNECT packets also takes some time. In case there is no any cushion of time, you will get the report containing error notification just because the  broker did not have enough time to process the packets. `requestTimeout` value is set in milliseconds.
+*`sendTime`* which is set for DISCONNECT packet, since the processing of DISCONNECT packets also takes some time. In case there is no any cushion of time, you will get the report containing error notification just because the  broker did not have enough time to process the packets. `requestTimeout` value is set in milliseconds.
 
-`scenario` is an object which contains the server parameters, packets, number of clients and other properties.
+*`scenario`* is an object which contains the server parameters, packets, number of clients and other properties.
 
-`id` can be set to null since it will be generated for each client.
+*`id`* can be set to null since it will be generated for each client.
 
-`properties` is an object which contains IP address of server and port (`serverHostname` and `serverPort`), `scenarioDelay`, `resendInterval` and `minPingInterval`. Besides it includes `identifierRegex` and `startIdentifier` parameters which were mentioned above.
+*`properties`* is an object which contains IP address of server and port (`serverHostname` and `serverPort`), `scenarioDelay`, `resendInterval` and `minPingInterval`. Besides it includes `identifierRegex` and `startIdentifier` parameters which were mentioned above.
 
-`scenarioDelay` is a time interval that indicates when the controller should start the test run after the test request is got. In this case it is set to 0 which means that controller start running the test immediately after the test request is got. `scenarioDelay` is set in milliseconds.
+*`scenarioDelay`* is a time interval that indicates when the controller should start the test run after the test request is got. In this case it is set to 0 which means that controller start running the test immediately after the test request is got. `scenarioDelay` is set in milliseconds.
 
-`resendInterval` - during this time period a client resends the packets that were not acknowledged by the server. It is set in milliseconds.
+*`resendInterval`* - during this time period a client resends the packets that were not acknowledged by the server. It is set in milliseconds.
 
-`minPingInterval` - recommended keep alive value. You should not set keep alive period shorter than 10 seconds. In JSON file it should be set in milliseconds.
+*`minPingInterval`* - recommended keep alive value. You should not set keep alive period shorter than 10 seconds. In JSON file it should be set in milliseconds.
 
-`count` - number of clients. Controller can process the packets of 64.000 concurrent connections.
+*`count`* - number of clients. Controller can process the packets of 64.000 concurrent connections.
 
-`threshold` - maximum number of commands that can be processed during one iteration. By “command” we mean the group of packets which allows to fulfill some action.
+*`threshold`* - maximum number of commands that can be processed during one iteration. By “command” we mean the group of packets which allows to fulfill some action.
 For example: 1) Establishment of connection requires sending of CONNECT and processing of CONNACK. 2) Subscribing requires sending of SUBSCRIBE and processing of SUBACK. 3) Sending message with QoS 2 requires sending of PUBLISH,  processing of PUBREC, sending of PUBREL, processing of PUBCOMP.
 
-`startThreshold` - maximum number of TCP connections. We recommend to not set the value which is more than 1.000.
+*`startThreshold`* - maximum number of TCP connections. We recommend to not set the value which is more than 1.000.
 
-`continueOnError` - it defines whether the testing process will be stopped in case of some failure.
+*`continueOnError`* - it defines whether the testing process will be stopped in case of some failure.
 
 == "Commands" object
 
-`commands` is an object which contains all the packets that should be sent by clients.
+*`commands`* is an object which contains all the packets that should be sent by clients.
 
-`type` is a parameter which contains the name of a particular MQTT packet.
-Each packet has `sendTime` attribute which defines when exactly a particular packet should be sent. `sendTime` is set in milliseconds. Pay attention that its starting time is not the establishment of connection, but sending of the last packet. As you can see in this case CONNECT and SUBSCRIBE packets are sent immediately after TCP socket is open, and UNSUBSCRIBE is sent within 65 sec after SUBSCRIBE is sent. And DISCONNECT is sent within 1 sec after UNSUBSCRIBE is sent.
+*`type`* is a parameter which contains the name of a particular MQTT packet.
+Each packet has *`sendTime`* attribute which defines when exactly a particular packet should be sent. `sendTime` is set in milliseconds. Pay attention that its starting time is not the establishment of connection, but sending of the last packet. As you can see in this case CONNECT and SUBSCRIBE packets are sent immediately after TCP socket is open, and UNSUBSCRIBE is sent within 65 sec after SUBSCRIBE is sent. And DISCONNECT is sent within 1 sec after UNSUBSCRIBE is sent.
 
-Besides each packet has `commandProperties` parameter, but it can be set to null if the packet does not have any properties, e.g. DISCONNECT. As you see CONNECT packet contains the following command properties: username, password, clean session and keep alive (set in seconds). And SUBSCRIBE packet contains only QoS and topic.
+Besides each packet has *`commandProperties`* parameter, but it can be set to null if the packet does not have any properties, e.g. DISCONNECT. As you see CONNECT packet contains the following command properties: username, password, clean session and keep alive (set in seconds). And SUBSCRIBE packet contains only QoS and topic.
 
 If you are interested in making considerable changes, the further information will help you to get into the structure of this test suite.
