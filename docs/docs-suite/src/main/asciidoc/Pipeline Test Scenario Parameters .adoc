@@ -75,4 +75,4 @@ Each packet has *`sendTime`* attribute which defines when exactly a particular p
 
 Besides each packet has *`commandProperties`* parameter, but it can be set to null if the packet does not have any properties, e.g. DISCONNECT. As you see CONNECT packet contains the following command properties: username, password, clean session and keep alive (set in seconds). And SUBSCRIBE packet contains only QoS and topic.
 
-If you are interested in making considerable changes, the further information will help you to get into the structure of this test suite.
+If you are interested in making considerable changes, the https://github.com/mobius-software-ltd/mqtt-test-suite/blob/master/docs/docs-suite/src/main/asciidoc/The%20Structure%20of%20Performance%20Test%20Suite.adoc[The Structure of Performance Test Suite] will help you to get into the structure of this test suite.
