@@ -20,7 +20,7 @@ Then you have to build the project. For this purpose, open the Performance Test 
 
 Now you have the controller (in _mqtt-test-suite/controller/target_ folder) and the test runner (in _mqtt-test-suite/runner/target_ folder) jar files on your computer.
 To make the work more convenient, create _performance_test_ folder which will contain `controller-jar-with-dependencies.jar` and `runner-jar-with-dependencies.jar`.
-Also you should add JSON files to this very _performance_test_ folder and `controller.params` file (you can find it in _mqtt-test-suite/controller_ folder).
+Also you should add [JSON files](https://github.com/mobius-software-ltd/mqtt-test-suite/tree/master/docs/docs-suite/src/main/asciidoc/samples) to this very _performance_test_ folder and `controller.params` file (you can find it in _mqtt-test-suite/controller_ folder).
 
 
 ### Test run
@@ -52,7 +52,7 @@ java -jar test-runner.jar pipeline.json
 ```
 The command mentioned above is an example of running the test scenario which is described in `pipeline.json` file.
 
-Each JSON file contains different test scenarios. You can separately run each test scenario by indicating the name of a specific JSON file. When the test is over you will get the report for each test scenario:
+Each [JSON file](https://github.com/mobius-software-ltd/mqtt-test-suite/tree/master/docs/docs-suite/src/main/asciidoc/samples) contains different test scenarios. You can separately run each test scenario by indicating the name of a specific [JSON file](https://github.com/mobius-software-ltd/mqtt-test-suite/tree/master/docs/docs-suite/src/main/asciidoc/samples). When the test is over you will get the report for each test scenario:
 ```
 +---------- Scenario-ID:  df2b3214-650e-41ed-b753-83862a473e6f ---------- Result: SUCCESS ----------+
 | Start Time                      | 2016-12-21 18:36:49.526        | 1482338209526                  |
