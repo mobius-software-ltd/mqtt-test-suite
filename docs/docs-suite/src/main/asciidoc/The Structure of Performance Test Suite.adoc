@@ -1,7 +1,7 @@
 [[api-docs]]
 = The Structure of Performance Test Suite
 
-The Performance Test Suite has two main modules: *runner* and *controller*.
+The Performance Test Suite project has two main modules: *runner* and *controller*.
 
 The test process starts in the runner module or, to be more specific, in `TestRunner` class.
 
