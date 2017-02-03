@@ -1,11 +1,7 @@
 [[api-docs]]
 = The Structure of Performance Test Suite
 
-Last update: 01.11.2016
-:toc:
-:title-logo-image: images/logo_stripe.png
-
-The Performance Test Suite has two main modules: runner and controller.
+The Performance Test Suite has two main modules: *runner* and *controller*.
 
 The test process starts in the runner module or, to be more specific, in `TestRunner` class.
 
@@ -14,21 +10,21 @@ The following code sample can be found in `TestRunner` class:
 
 [source, java]
 ----
-		{
-			File json = FileUtil.readFile(args[0]);
-			List<RequestWorker> workers = new ArrayList<>();
-			List<ScenarioRequest> requests = RequestFormatter.parseScenarioRequests(json);
-			CountDownLatch latch = new CountDownLatch(requests.size());
-			for (ScenarioRequest request : requests)
-				workers.add(new RequestWorker(request, latch));
+{
+        File json = FileUtil.readFile(args[0]);
+	List<RequestWorker> workers = new ArrayList<>();
+	List<ScenarioRequest> requests = RequestFormatter.parseScenarioRequests(json);
+	CountDownLatch latch = new CountDownLatch(requests.size());
+	for (ScenarioRequest request : requests)
+		workers.add(new RequestWorker(request, latch));
 
-			ExecutorService service = Executors.newFixedThreadPool(workers.size());
-			for (RequestWorker worker : workers)
-				service.submit(worker);
-			latch.await();
+	ExecutorService service = Executors.newFixedThreadPool(workers.size());
+	for (RequestWorker worker : workers)
+		service.submit(worker);
+	latch.await();
 
-			service.shutdownNow();
-		}
+	service.shutdownNow();
+}
 ----
 The request worker is responsible for execution of requests which belong to a particular test scenario. When a request worker receives the test scenario from the test runner, first it retrieves the integer value set for "requestTimeout" attribute in JSON file by calling `request.getRequestTimeout()`.
 The request worker sends the test request to the requester by calling `sendScenario` method.
@@ -82,20 +78,20 @@ When the requester receives the test request from the request worker, it calls `
 [source, java]
 ----
 public static GenericJsonRequest sendScenario(String baseURL, Scenario request) throws Exception
+{
+	String requestURL = URLBuilder.build(baseURL, PathSegment.CONTROLLER, PathSegment.SCENARIO);
+	JSONContainer container = new JSONContainer(requestURL);
+	GenericJsonRequest response = null;
+	try
 	{
-		String requestURL = URLBuilder.build(baseURL, PathSegment.CONTROLLER, PathSegment.SCENARIO);
-		JSONContainer container = new JSONContainer(requestURL);
-		GenericJsonRequest response = null;
-		try
-		{
-			response = container.post(request);
-		}
-		finally
-		{
-			container.release();
-		}
-		return response;
+		response = container.post(request);
 	}
+	finally
+	{
+		container.release();
+	}
+	return response;
+}
 ----
 
 When the requester receives the request for report from the request worker, it calls `requestReport` method. In its turn URL Builder creates the corresponding path for the request (http://[IP address of controller]:[port of controller]/controller/report). Then the request for report is sent to the controller. The following code sample can be found in `Request` class:
@@ -103,21 +99,21 @@ When the requester receives the request for report from the request worker, it c
 [source, java]
 ----
 public static ReportResponse requestReport(String baseURL, UUID id) throws Exception
+{
+	String requestURL = URLBuilder.build(baseURL, PathSegment.CONTROLLER, PathSegment.REPORT);
+	UniqueIdentifierRequest request = new UniqueIdentifierRequest(id);
+	JSONContainer container = new JSONContainer(requestURL);
+	ReportResponse report = null;
+	try
 	{
-		String requestURL = URLBuilder.build(baseURL, PathSegment.CONTROLLER, PathSegment.REPORT);
-		UniqueIdentifierRequest request = new UniqueIdentifierRequest(id);
-		JSONContainer container = new JSONContainer(requestURL);
-		ReportResponse report = null;
-		try
-		{
-			report = container.requestReport(request);
-		}
-		finally
-		{
-			container.release();
-		}
-		return report;
+		report = container.requestReport(request);
 	}
+	finally
+	{
+		container.release();
+	}
+	return report;
+}
 ----
 
 When the requester receives the request for deleting the test scenario from the request worker, it calls `requestClear` method. In its turn URL Builder creates the corresponding path for the request (http://[IP address of controller]:[port of controller]/controller/clear). Then the request for deleting is sent to the controller. The following code sample can be found in `Request` class:
@@ -146,10 +142,10 @@ When controller gets the test request, first the controller validates it. If the
 [source, java]
 ----
 }
-			orchestrator.start();
-			scenarioMap.put(json.getId(), orchestrator);
-			return new GenericJsonRequest(ResponseData.SUCCESS, null);
-		}
+	orchestrator.start();
+	scenarioMap.put(json.getId(), orchestrator);
+	return new GenericJsonRequest(ResponseData.SUCCESS, null);
+}
 
 ----
 Besides the controller creates the clients adding them to the client list:
@@ -157,15 +153,15 @@ Besides the controller creates the clients adding them to the client list:
 [source, java]
 ----
 {
-				String clientID = null;
-				if (username != null)
-				{
-					int identityCounter = identifierStorage.countIdentity(properties.getIdentifierRegex(), properties.getStartIdentifier());
-					clientID = IdentifierParser.parseIdentifier(properties.getIdentifierRegex(), username, properties.getServerHostname(), identityCounter);
-				}
-				Client client = new Client(clientID, orchestrator, listener, json.getCommands());
-				clientList.add(client);
-			}
+	String clientID = null;
+	if (username != null)
+	{
+		int identityCounter = identifierStorage.countIdentity(properties.getIdentifierRegex(), properties.getStartIdentifier());
+		clientID = IdentifierParser.parseIdentifier(properties.getIdentifierRegex(), username, properties.getServerHostname(), identityCounter);
+	}
+	Client client = new Client(clientID, orchestrator, listener, json.getCommands());
+	clientList.add(client);
+}
 ----
 
 When the controller gets the request for report, it calls `report()` method upon `Orchestrator` which in its turn retrieves the required data from the scenario map and sends it to controller. The following code sample can be found in `Controller` class:
@@ -173,12 +169,12 @@ When the controller gets the request for report, it calls `report()` method upon
 [source, java]
 ----
 public ReportResponse report(UniqueIdentifierRequest json)
-	{
-		Orchestrator orchestrator = scenarioMap.get(json.getId());
-		if (orchestrator == null)
-			return new ReportResponse(ResponseData.NOT_FOUND);
-		return orchestrator.report();
-	}
+{
+	Orchestrator orchestrator = scenarioMap.get(json.getId());
+	if (orchestrator == null)
+		return new ReportResponse(ResponseData.NOT_FOUND);
+	return orchestrator.report();
+}
 ----
 
 Having got the request for report, `Orchestrator` retrieves, translates the reports and forms  array list of reports. The following code sample can be found in `Orchestrator` class:
@@ -186,12 +182,12 @@ Having got the request for report, `Orchestrator` retrieves, translates the repo
 [source, java]
 ----
 public ReportResponse report()
-	{
-		List<ClientReport> reports = new ArrayList<>();
-		for (Client client : clientList)
-			reports.add(client.retrieveReport().translate());
-		return new ReportResponse(ResponseData.SUCCESS, properties.getScenarioID(), startTime, finishTime, reports);
-	}
+{
+	List<ClientReport> reports = new ArrayList<>();
+	for (Client client : clientList)
+		reports.add(client.retrieveReport().translate());
+	return new ReportResponse(ResponseData.SUCCESS, properties.getScenarioID(), startTime, finishTime, reports);
+}
 ----
 
 When the controller gets the request for deleting the test scenario, it calls `clear(UniqueIdentifierRequest json)` method. `Orchestrator` removes the scenario from its map. The following code sample can be found in `Controller` class:
@@ -199,18 +195,18 @@ When the controller gets the request for deleting the test scenario, it calls `c
 [source, java]
 ----
 public GenericJsonRequest clear(UniqueIdentifierRequest json)
-	{
-		if (!json.validate())
-			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
+{
+	if (!json.validate())
+		return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
 
-		Orchestrator orchestrator = scenarioMap.get(json.getId());
-		if (orchestrator == null)
-			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.NOT_FOUND);
+	Orchestrator orchestrator = scenarioMap.get(json.getId());
+	if (orchestrator == null)
+		return new GenericJsonRequest(ResponseData.ERROR, ResponseData.NOT_FOUND);
 
-		orchestrator.terminate();
+	orchestrator.terminate();
 
-		return new GenericJsonRequest(ResponseData.SUCCESS, null);
-	}
+	return new GenericJsonRequest(ResponseData.SUCCESS, null);
+}
 ----
 
 All the requests sent by controller come to `Orchestrator`.
@@ -220,20 +216,20 @@ All the requests sent by controller come to `Orchestrator`.
 [source, java]
 ----
 public void start()
+{
+	startTime = System.currentTimeMillis() + properties.getScenarioDelay();
+	for (Client client : clientList)
 	{
-		startTime = System.currentTimeMillis() + properties.getScenarioDelay();
-		for (Client client : clientList)
+		if (startingCount.get() < properties.getStartThreashold())
 		{
-			if (startingCount.get() < properties.getStartThreashold())
-			{
-				pendingCount.incrementAndGet();
-				startingCount.incrementAndGet();
-				scheduler.store(System.currentTimeMillis() + properties.getInitialDelay() + properties.getScenarioDelay(), client);
-			}
-			else
-				pendingQueue.offer(client);
+			pendingCount.incrementAndGet();
+			startingCount.incrementAndGet();
+			scheduler.store(System.currentTimeMillis() + properties.getInitialDelay() + properties.getScenarioDelay(), client);
 		}
+		else
+			pendingQueue.offer(client);
 	}
+}
 ----
 
 Then `Orchestrator` initiates the test run by calling `notifyOnStart` method. During the test run it checks if the number of commands processed during one iteration is higher than it is set in `Threshold` attribute in JSON file, `Orchestrator` adds it to the queue. The time period of iteration is defined as `timersInterval` and it is set in controller.params file. The following code sample can be found in `Orchestrator` class:
