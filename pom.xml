@@ -23,8 +23,7 @@
 		<dependency>
 			<groupId>com.mobius-software.mqtt</groupId>
 			<artifactId>parser</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<scope>compile</scope>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 	<build>
