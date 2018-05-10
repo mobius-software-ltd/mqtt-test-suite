@@ -9,7 +9,7 @@
 
 	<groupId>com.mobius-software.mqtt</groupId>
 	<artifactId>mqtt-performance-test</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 
@@ -20,7 +20,7 @@
 		<url>https://github.com/mobius-software-ltd/mqtt-test-suite</url>
 		<connection>scm:git:git://github.com:mobius-software-ltd/mqtt-test-suite.git</connection>
 		<developerConnection>scm:git:git@github.com:mobius-software-ltd/mqtt-test-suite.git</developerConnection>
-		<tag>mqtt-performance-test-1.0.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<modules>
