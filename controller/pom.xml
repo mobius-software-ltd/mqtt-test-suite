@@ -8,9 +8,9 @@
 	</parent>
 	
 	<groupId>com.mobius-software.mqtt</groupId>
-	<artifactId>controller</artifactId>
+	<artifactId>mqtt-testsuite-controller</artifactId>
 	
-	<name>mqtt-testsuite-controller</name>
+	<name>controller</name>
 	<description>MQTT Client Controller</description>
 
 	<properties>
