@@ -3,12 +3,12 @@
 	
 	<parent>
 		<groupId>com.mobius-software.mqtt</groupId>
-		<artifactId>docs</artifactId>
+		<artifactId>mqtt-testsuite-docs</artifactId>
 		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 	
 	<groupId>com.mobius.software.mqtt</groupId>
-	<artifactId>pdf-port</artifactId>
+	<artifactId>mqtt-testsuite-pdf-port</artifactId>
 	
 	<name>pdf-port</name>
 	<description>PDF Driver porting to maven</description>

@@ -8,7 +8,7 @@
 	</parent>
 	
 	<groupId>com.mobius-software.mqtt</groupId>
-	<artifactId>runner</artifactId>
+	<artifactId>mqtt-testsuite-runner</artifactId>
 	
 	<name>MQTT Performance test runner</name>
 

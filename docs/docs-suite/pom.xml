@@ -3,12 +3,12 @@
 	
 	<parent>
 		<groupId>com.mobius-software.mqtt</groupId>
-		<artifactId>docs</artifactId>
+		<artifactId>mqtt-testsuite-docs</artifactId>
 		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 	
 	<groupId>com.mobius.software.mqtt</groupId>
-	<artifactId>docs-suite</artifactId>
+	<artifactId>mqtt-testsuite-docs-suite</artifactId>
 	
 	<name>docs-rest</name>
 	<description>MQTT Performace Test Suite Documentation</description>

@@ -10,7 +10,7 @@
 	<groupId>com.mobius-software.mqtt</groupId>
 	<artifactId>controller</artifactId>
 	
-	<name>controller</name>
+	<name>mqtt-testsuite-controller</name>
 	<description>MQTT Client Controller</description>
 
 	<properties>

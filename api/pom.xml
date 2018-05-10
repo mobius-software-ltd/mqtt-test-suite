@@ -8,7 +8,7 @@
 	</parent>
 	
 	<groupId>com.mobius-software.mqtt</groupId>
-	<artifactId>api</artifactId>
+	<artifactId>mqtt-testsuite-api</artifactId>
 	
 	<name>Rest API</name>
 

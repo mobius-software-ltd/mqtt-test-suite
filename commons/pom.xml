@@ -8,7 +8,7 @@
 	</parent>
 	
 	<groupId>com.mobius-software.mqtt</groupId>
-	<artifactId>commons</artifactId>
+	<artifactId>mqtt-testsuite-commons</artifactId>
 	
 	<name>Performance Test Commons</name>
 
