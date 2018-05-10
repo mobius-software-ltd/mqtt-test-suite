@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.mobius-software.mqtt</groupId>
 		<artifactId>mqtt-performance-test</artifactId>
-		<version>1.0.2-SNAPSHOT</version>
+		<version>1.0.2</version>
 	</parent>
 	
 	<groupId>com.mobius-software.mqtt</groupId>
@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>com.mobius-software.mqtt</groupId>
 			<artifactId>commons</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
