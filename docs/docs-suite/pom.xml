@@ -7,7 +7,7 @@
 		<version>1.0.3-SNAPSHOT</version>
 	</parent>
 	
-	<groupId>com.mobius.software.mqtt</groupId>
+	<groupId>com.mobius-software.mqtt</groupId>
 	<artifactId>mqtt-testsuite-docs-suite</artifactId>
 	
 	<name>docs-rest</name>
