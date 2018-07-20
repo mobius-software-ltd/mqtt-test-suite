@@ -28,27 +28,22 @@ import org.apache.commons.logging.LogFactory;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 
+@Sharable
 public class ExceptionHandler extends ChannelDuplexHandler
 {
 	private static final Log logger = LogFactory.getLog(ExceptionHandler.class);
-	private static final String separator = ",";
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	{
-		SocketAddress address = ctx.channel().remoteAddress();
+		logger.warn(cause.getMessage() + "," + ctx.channel().localAddress(), cause);
+		
 		if (ctx.channel().isOpen())
 			ctx.channel().close();
-
-		StringBuilder sb = new StringBuilder();
-		sb.append(address).append(separator);
-		sb.append(cause.getClass().getName().substring(cause.getClass().getName().lastIndexOf(".") + 1)).append(separator);
-		sb.append(cause.getMessage().substring(cause.getMessage().lastIndexOf(".") + 1));
-		logger.error(sb.toString());
-		cause.printStackTrace();
 	}
 
 	@Override
@@ -60,7 +55,7 @@ public class ExceptionHandler extends ChannelDuplexHandler
 			public void operationComplete(ChannelFuture future)
 			{
 				if (!future.isSuccess())
-					logger.error("an error occured while tcp connect," + future.channel().localAddress());
+					exceptionCaught(ctx, future.cause());
 			}
 		}));
 	}
@@ -74,7 +69,7 @@ public class ExceptionHandler extends ChannelDuplexHandler
 			public void operationComplete(ChannelFuture future)
 			{
 				if (!future.isSuccess())
-					logger.error("channel write operation failed");
+					exceptionCaught(ctx, future.cause());
 			}
 		}));
 	}

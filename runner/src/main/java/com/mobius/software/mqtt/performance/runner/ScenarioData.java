@@ -27,14 +27,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.mobius.software.mqtt.performance.api.data.ClientReport;
-import com.mobius.software.mqtt.performance.api.data.Repeat;
-import com.mobius.software.mqtt.performance.api.data.Scenario;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
-import com.mobius.software.mqtt.performance.commons.data.CommandCounter;
-import com.mobius.software.mqtt.performance.commons.data.CommandType;
-import com.mobius.software.mqtt.performance.commons.data.Counter;
-import com.mobius.software.mqtt.performance.commons.data.Direction;
+import com.mobius.software.mqtt.performance.commons.data.*;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 
 public class ScenarioData

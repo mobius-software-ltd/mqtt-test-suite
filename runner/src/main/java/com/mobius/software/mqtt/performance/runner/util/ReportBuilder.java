@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import com.mobius.software.mqtt.performance.api.data.ErrorReport;
+import com.mobius.software.mqtt.performance.commons.data.ErrorReport;
 import com.mobius.software.mqtt.performance.commons.util.table.Cell;
 import com.mobius.software.mqtt.performance.commons.util.table.TableBuilder;
 import com.mobius.software.mqtt.performance.runner.Counters;

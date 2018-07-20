@@ -76,4 +76,10 @@ public class Command
 	{
 		return type != null && sendTime != null && CommandParser.validate(this);
 	}
+
+	@Override
+	public String toString()
+	{
+		return "Command [type=" + type + ", sendTime=" + sendTime + ", commandProperties=" + commandProperties + "]";
+	}
 }

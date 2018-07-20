@@ -8,8 +8,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import com.mobius.software.mqtt.performance.api.data.ErrorReport;
-import com.mobius.software.mqtt.performance.api.data.ErrorType;
+import com.mobius.software.mqtt.performance.commons.data.ErrorReport;
+import com.mobius.software.mqtt.performance.commons.data.ErrorType;
 import com.mobius.software.mqtt.performance.runner.util.ReportBuilder;
 
 public class BuilderTests

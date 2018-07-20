@@ -21,13 +21,18 @@
 package com.mobius.software.mqtt.performance.controller;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.mobius.software.mqtt.performance.api.data.ClientReport;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.api.json.ResponseData;
+import com.mobius.software.mqtt.performance.commons.data.ClientReport;
 import com.mobius.software.mqtt.performance.controller.client.Client;
 import com.mobius.software.mqtt.performance.controller.task.TimedTask;
 
@@ -39,7 +44,6 @@ public class Orchestrator
 
 	private AtomicInteger startingCount = new AtomicInteger(0);
 	private AtomicInteger pendingCount = new AtomicInteger(0);
-	private AtomicInteger completedCount = new AtomicInteger(0);
 	private ConcurrentLinkedQueue<Client> pendingQueue = new ConcurrentLinkedQueue<>();
 	private long startTime;
 	private long finishTime;
@@ -54,30 +58,35 @@ public class Orchestrator
 	public void start()
 	{
 		startTime = System.currentTimeMillis() + properties.getScenarioDelay();
-		for (Client client : clientList)
+		Queue<Client> tempQueue = new LinkedList<>(clientList);
+		Map<Client, Long> toStore = new LinkedHashMap<>();
+		while (!tempQueue.isEmpty())
 		{
-			if (startingCount.get() < properties.getStartThreashold())
-			{
-				pendingCount.incrementAndGet();
-				startingCount.incrementAndGet();
-				scheduler.store(System.currentTimeMillis() + properties.getInitialDelay() + properties.getScenarioDelay(), client);
-			}
+			int oldStarting = startingCount.get();
+			int newStarting = startingCount.updateAndGet(v -> startingCount.get() >= properties.getStartThreashold() ? startingCount.get() : startingCount.get() + 1);
+			if (newStarting > oldStarting)
+				toStore.put(tempQueue.poll(), System.currentTimeMillis() + properties.getInitialDelay() + properties.getScenarioDelay());
 			else
-				pendingQueue.offer(client);
+				break;
 		}
+
+		pendingQueue.addAll(tempQueue);
+		for (Entry<Client, Long> entry : toStore.entrySet())
+			scheduler.store(entry.getValue(), entry.getKey());
 	}
 
 	public void notifyOnStart()
 	{
 		if (startingCount.decrementAndGet() < properties.getStartThreashold())
 		{
-			if (pendingCount.get() < properties.getThreashold())
+			int oldPending = startingCount.get();
+			int newPending = startingCount.updateAndGet(v -> !pendingQueue.isEmpty() && startingCount.get() >= properties.getStartThreashold() ? startingCount.get() : startingCount.get() + 1);
+			if (newPending > oldPending)
 			{
 				Client newClient = pendingQueue.poll();
 				if (newClient != null)
 				{
 					pendingCount.incrementAndGet();
-					startingCount.incrementAndGet();
 					scheduler.store(System.currentTimeMillis() + properties.getInitialDelay(), newClient);
 				}
 			}
@@ -86,18 +95,15 @@ public class Orchestrator
 
 	public void notifyOnComplete()
 	{
-		completedCount.incrementAndGet();
 		if (pendingCount.decrementAndGet() < properties.getThreashold())
 		{
-			if (startingCount.get() < properties.getStartThreashold())
+			int oldPending = pendingCount.get();
+			int newPending = pendingCount.updateAndGet(v -> !pendingQueue.isEmpty() && pendingCount.get() >= properties.getThreashold() ? pendingCount.get() : pendingCount.get() + 1);
+			if (newPending > oldPending)
 			{
 				Client newClient = pendingQueue.poll();
 				if (newClient != null)
-				{
-					pendingCount.incrementAndGet();
-					startingCount.incrementAndGet();
 					scheduler.store(System.currentTimeMillis() + properties.getInitialDelay(), newClient);
-				}
 				else
 					finishTime = System.currentTimeMillis();
 			}

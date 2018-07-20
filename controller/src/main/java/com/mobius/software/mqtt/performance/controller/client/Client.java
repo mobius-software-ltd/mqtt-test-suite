@@ -20,9 +20,7 @@
 
 package com.mobius.software.mqtt.performance.controller.client;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFuture;
-
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -40,14 +38,17 @@ import com.mobius.software.mqtt.parser.avps.Will;
 import com.mobius.software.mqtt.parser.header.api.MQDevice;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.*;
-import com.mobius.software.mqtt.performance.api.data.ErrorType;
 import com.mobius.software.mqtt.performance.commons.data.Command;
+import com.mobius.software.mqtt.performance.commons.data.ErrorType;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 import com.mobius.software.mqtt.performance.controller.Orchestrator;
 import com.mobius.software.mqtt.performance.controller.net.ConnectionListener;
 import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
 import com.mobius.software.mqtt.performance.controller.task.MessageResendTimer;
 import com.mobius.software.mqtt.performance.controller.task.TimedTask;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 
 public class Client implements MQDevice, ConnectionListener, TimedTask
 {
@@ -70,7 +71,8 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	public Client(String clientID, Orchestrator orchestrator, NetworkHandler listener, ConcurrentLinkedQueue<Command> commands)
 	{
 		this.clientID = clientID;
-		this.ctx = new ConnectionContext(orchestrator.getProperties().getServerAddress(), orchestrator.getProperties().getResendInterval());
+		InetSocketAddress serverAddress = orchestrator.getProperties().isWs() ? orchestrator.getProperties().getWsServerAddress() : orchestrator.getProperties().getServerAddress();
+		this.ctx = new ConnectionContext(serverAddress, orchestrator.getProperties().getResendInterval());
 		this.listener = listener;
 		this.commands = commands;
 		this.report = new IdentityReport(clientID);
@@ -103,8 +105,8 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 				}
 				else
 					channelHandler.compareAndSet(null, listener.connect(ctx.remoteAddress()));
-
 				timestamp.set(System.currentTimeMillis() + orchestrator.getProperties().getInitialDelay());
+
 				return true;
 			}
 			else
@@ -162,8 +164,8 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 							break;
 						case CONNECT:
 							Connect connect = (Connect) message;
-							ctx.update(connect.isClean(), connect.getKeepAlive(), connect.getClientID());
-							timers.storeConnect(message);
+							ctx.update(connect.isCleanSession(), connect.getKeepalive(), connect.getClientID());
+							//timers.storeConnect(message);
 							break;
 						default:
 							break;
@@ -173,6 +175,7 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 
 						if (closeChannel)
 						{
+							listener.releaseLocalPort(ctx.remoteAddress(), ((InetSocketAddress) ctx.localAddress()).getPort());
 							status.set(false);
 							channelHandler.set(null);
 							listener.close(ctx.localAddress());
@@ -190,7 +193,7 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 				}
 				while (nextCommand != null && currTimestamp == timestamp.get());
 
-				return nextCommand != null;
+				return commands.peek() != null;
 			}
 		}
 		catch (Exception e)
@@ -383,7 +386,7 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 	{
 		if (status.get())
 		{
-			report.reportError(ErrorType.CONNECTION_LOST, "connection closed:" + address);
+			//report.reportError(ErrorType.CONNECTION_LOST, "connection closed:" + address);
 			timers.stopAllTimers();
 		}
 	}
@@ -416,9 +419,6 @@ public class Client implements MQDevice, ConnectionListener, TimedTask
 		int commandsCount = commands.size() + failedCommands.get();
 		if (pendingCommand.get() != null)
 			commandsCount++;
-
-		if (commandsCount > 0)
-			System.out.println("clientID:" + clientID + ",address:" + ctx.localAddress() + "failed:" + failedCommands.get());
 
 		report.setUnfinishedCommands(commandsCount);
 		return report;

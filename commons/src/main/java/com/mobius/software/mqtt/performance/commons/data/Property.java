@@ -55,4 +55,10 @@ public class Property
 	{
 		this.value = value;
 	}
+
+	@Override
+	public String toString()
+	{
+		return "Property [type=" + type + ", value=" + value + "]";
+	}
 }

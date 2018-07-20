@@ -20,52 +20,50 @@
 
 package com.mobius.software.mqtt.performance.controller;
 
-import java.net.URI;
-import java.util.Arrays;
+import java.util.Properties;
 
 public class Config
 {
-	private static final String ERROR_MESSAGE = "An eror occured while parsing argument: ";
-
-	private static final String WORKERS = "-workers=";
-	private static final String TIMERS_INTERVAL = "-timersInterval=";
-	private static final String INITIAL_DELAY = "-delay=";
+	private static final String WORKERS = "workers";
+	private static final String TIMERS_INTERVAL = "timersInterval";
+	private static final String INITIAL_DELAY = "delay";
+	private static final String HOSTNAME = "hostname";
 
 	private Integer workers;
 	private Integer timersInterval;
 	private Integer initialDelay;
+	private String hostname;
 
-	public Config(URI baseURI, Integer workers, Integer timersInterval, Integer initialDelay)
+	public Config(Integer workers, Integer timersInterval, Integer initialDelay, String hostname)
 	{
 		this.workers = workers;
 		this.timersInterval = timersInterval;
 		this.initialDelay = initialDelay;
+		this.hostname = hostname;
 	}
 
-	public static Config parse(String[] args)
+	private static Config INSTANCE;
+
+	public static Config getInstance()
 	{
-		Integer workers = null, timersInterval = null, initialDelay = null;
-		URI baseURI = null;
+		return INSTANCE;
+	}
+
+	public static Config parse(Properties properties)
+	{
 		try
 		{
-			if (!args[0].startsWith(WORKERS))
-				throw new IllegalArgumentException(ERROR_MESSAGE + WORKERS + ", args: " + Arrays.asList(args));
-			workers = Integer.parseInt(args[0].replace(WORKERS, ""));
-
-			if (!args[1].startsWith(TIMERS_INTERVAL))
-				throw new IllegalArgumentException(ERROR_MESSAGE + TIMERS_INTERVAL + ", args: " + Arrays.asList(args));
-			timersInterval = Integer.parseInt(args[1].replace(TIMERS_INTERVAL, ""));
-
-			if (!args[2].startsWith(INITIAL_DELAY))
-				throw new IllegalArgumentException(ERROR_MESSAGE + INITIAL_DELAY + ", args: " + Arrays.asList(args));
-			initialDelay = Integer.parseInt(args[2].replace(INITIAL_DELAY, ""));
+			Integer workers = Integer.parseInt(properties.getProperty(WORKERS));
+			Integer timersInterval = Integer.parseInt(properties.getProperty(TIMERS_INTERVAL));
+			Integer initialDelay = Integer.parseInt(properties.getProperty(INITIAL_DELAY));
+			String hostname = properties.getProperty(HOSTNAME);
+			INSTANCE = new Config(workers, timersInterval, initialDelay, hostname);
+			return INSTANCE;
 		}
 		catch (NumberFormatException e)
 		{
 			throw new IllegalArgumentException("invalid arguments format: " + e.getMessage());
 		}
-
-		return new Config(baseURI, workers, timersInterval, initialDelay);
 	}
 
 	public Integer getWorkers()
@@ -96,5 +94,15 @@ public class Config
 	public void setInitialDelay(Integer initialDelay)
 	{
 		this.initialDelay = initialDelay;
+	}
+
+	public String getHostname()
+	{
+		return hostname;
+	}
+
+	public void setHostname(String hostname)
+	{
+		this.hostname = hostname;
 	}
 }

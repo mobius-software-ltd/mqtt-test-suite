@@ -20,8 +20,6 @@
 
 package com.mobius.software.mqtt.performance.commons.util;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +38,8 @@ import com.mobius.software.mqtt.performance.commons.data.Command;
 import com.mobius.software.mqtt.performance.commons.data.CommandType;
 import com.mobius.software.mqtt.performance.commons.data.Property;
 import com.mobius.software.mqtt.performance.commons.data.PropertyType;
+
+import io.netty.buffer.ByteBuf;
 
 public class CommandParser
 {

@@ -20,67 +20,89 @@
 
 package com.mobius.software.mqtt.performance.controller.net;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.SocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.mobius.software.mqtt.performance.controller.Config;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 
-public class ClientBootstrap
+public abstract class ClientBootstrap
 {
-	private static final Log logger = LogFactory.getLog(ClientBootstrap.class);
+	protected static final Log logger = LogFactory.getLog(ClientBootstrap.class);
 
-	private Bootstrap bootstrap = new Bootstrap();
-	private AtomicBoolean pipelineInitialized = new AtomicBoolean(false);
-	private NioEventLoopGroup loopGroup = new NioEventLoopGroup(16);
-	private ConcurrentHashMap<SocketAddress, ConnectionListener> clientListeners;
+	protected Bootstrap bootstrap = new Bootstrap();
+	protected AtomicBoolean pipelineInitialized = new AtomicBoolean(false);
+	protected NioEventLoopGroup loopGroup = new NioEventLoopGroup(16);
+	protected ConcurrentHashMap<SocketAddress, ConnectionListener> clientListeners;
+	protected SocketAddress serverAddress;
+
+	private ConcurrentHashMap<Integer, Boolean> usedPorts = new ConcurrentHashMap<>();
+	private AtomicInteger currLocalPort = new AtomicInteger(10000);
 
 	public ClientBootstrap(ConcurrentHashMap<SocketAddress, ConnectionListener> clientListeners)
 	{
 		this.clientListeners = clientListeners;
 	}
 
-	public void init(SocketAddress serverAddress) throws InterruptedException
-	{
-		if (pipelineInitialized.compareAndSet(false, true))
-		{
-			bootstrap.group(loopGroup);
-			bootstrap.channel(NioSocketChannel.class);
-			bootstrap.option(ChannelOption.TCP_NODELAY, true);
-			bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-
-			bootstrap.handler(new ChannelInitializer<SocketChannel>()
-			{
-				@Override
-				protected void initChannel(SocketChannel socketChannel) throws Exception
-				{
-					socketChannel.pipeline().addLast(new Decoder());
-					socketChannel.pipeline().addLast(new Encoder());
-					socketChannel.pipeline().addLast("handler", new Handler(clientListeners));
-					socketChannel.pipeline().addLast(new ExceptionHandler());
-				}
-			});
-			bootstrap.remoteAddress(serverAddress);
-		}
-	}
+	public abstract void init(SocketAddress serverAddress) throws InterruptedException;
 
 	public ChannelFuture createConnection()
 	{
-		return bootstrap.connect();
+		if (this.serverAddress == null)
+			throw new IllegalStateException("bootstrap not initialized...");
+
+		InetSocketAddress localAddress = nextLocalAddress();
+		return bootstrap.connect(this.serverAddress, localAddress);
+	}
+
+	protected InetSocketAddress nextLocalAddress()
+	{
+		int port = 0;
+		do
+		{
+			if (usedPorts.size() == 65535)
+				throw new IllegalStateException("reached limit for number of connected clients");
+
+			currLocalPort.compareAndSet(65535, 10000);
+			port = currLocalPort.incrementAndGet();
+			if (port == 21883)
+				continue;
+		}
+		while (!available(Config.getInstance().getHostname(), port) || usedPorts.put(port, true) != null);
+
+		return new InetSocketAddress(Config.getInstance().getHostname(), port);
+	}
+
+	public static boolean available(String host, int port)
+	{
+		try (ServerSocket ss = new ServerSocket(port, 50, InetAddress.getByName(host)))
+		{
+			ss.setReuseAddress(true);
+			return true;
+		}
+		catch (IOException e)
+		{
+		}
+
+		return false;
 	}
 
 	public void shutdown()
 	{
+		clearPorts();
 		if (loopGroup != null)
 		{
 			Future<?> future = loopGroup.shutdownGracefully();
@@ -93,5 +115,16 @@ public class ClientBootstrap
 				logger.error("An error occured while performing shutdown: interrupted loopGroup shutdown");
 			}
 		}
+	}
+
+	public void clearPorts()
+	{
+		this.usedPorts.clear();
+		this.currLocalPort.set(10000);
+	}
+
+	public void releaseLocalPort(int port)
+	{
+		this.usedPorts.remove(port);
 	}
 }

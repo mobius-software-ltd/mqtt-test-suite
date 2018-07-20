@@ -1,13 +1,14 @@
 package com.mobius.software.mqtt.performance.runner;
 
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.mobius.software.mqtt.performance.api.data.ScenarioRequest;
 import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
+import com.mobius.software.mqtt.performance.commons.data.ScenarioRequest;
 import com.mobius.software.mqtt.performance.runner.util.FileUtil;
 import com.mobius.software.mqtt.performance.runner.util.ReportBuilder;
 import com.mobius.software.mqtt.performance.runner.util.Requester;
@@ -33,6 +34,7 @@ public class RequestWorker implements Runnable
 			GenericJsonRequest response = Requester.sendScenario(request.retrieveBaseURL(), request.getScenario());
 			if (response.successful())
 			{
+				logger.info("estimated scenario finishtime: " + new Date(System.currentTimeMillis() + request.getRequestTimeout()));
 				Thread.sleep(request.getRequestTimeout());
 
 				ReportResponse report = Requester.requestReport(request.retrieveBaseURL(), request.getScenario().getId());
@@ -40,7 +42,6 @@ public class RequestWorker implements Runnable
 				{
 					ScenarioData data = ScenarioData.translate(request.getScenario(), report);
 					System.out.println(ReportBuilder.buildSummary(data));
-
 					FileUtil.logErrors(data.getScenarioID(), report.getReports());
 					response = Requester.requestClear(request.retrieveBaseURL(), request.getScenario().getId());
 					if (!response.successful())

@@ -63,18 +63,11 @@ public class JSONContainer
 
 	public GenericJsonRequest post(Object request) throws Exception
 	{
-		Builder builder = getResource().getRequestBuilder().type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON);
-		GenericJsonRequest response = null;
-		try
-		{
-			response = builder.post(GenericJsonRequest.class, request);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			throw e;
-		}
-		return response;
+		return getResource()//
+				.getRequestBuilder()//
+				.type(MediaType.APPLICATION_JSON)//
+				.accept(MediaType.APPLICATION_JSON)//
+				.post(GenericJsonRequest.class, request);
 	}
 
 	public ReportResponse requestReport(Object request) throws Exception

@@ -31,7 +31,7 @@ import com.mobius.software.mqtt.performance.api.json.MultiScenarioData;
 
 public class JsonParseTests
 {
-	private static final String RESOURCES_FOLDER = "src/test/resources";
+	private static final String RESOURCES_FOLDER = "src/main/resources";
 
 	@Test
 	public void testParseFiles()
@@ -42,6 +42,7 @@ public class JsonParseTests
 			File[] files = resourcesDirectory.listFiles();
 			for (File json : files)
 			{
+				System.out.println(json.getAbsolutePath());
 				ObjectMapper mapper = new ObjectMapper();
 				MultiScenarioData controllersScenarioRequests = null;
 				controllersScenarioRequests = mapper.readValue(json, MultiScenarioData.class);

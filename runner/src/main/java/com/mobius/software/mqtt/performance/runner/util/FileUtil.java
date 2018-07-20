@@ -27,14 +27,12 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.UUID;
 
-import javassist.NotFoundException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.mobius.software.mqtt.performance.api.data.ClientReport;
-import com.mobius.software.mqtt.performance.api.data.ErrorReport;
-import com.mobius.software.mqtt.performance.runner.TestRunner;
+import com.mobius.software.mqtt.performance.commons.data.ClientReport;
+import com.mobius.software.mqtt.performance.commons.data.ErrorReport;
+import com.mobius.software.mqtt.performance.runner.ScenarioRunner;
 
 public class FileUtil
 {
@@ -43,13 +41,13 @@ public class FileUtil
 	private static final String DIRECTORY_NAME = "errors";
 	private static final String LOG_EXTENSION = ".log";
 
-	public static File readFile(String filename) throws URISyntaxException, NotFoundException
+	public static File readFile(String filename) throws URISyntaxException, IllegalArgumentException
 	{
-		String path = TestRunner.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+		String path = ScenarioRunner.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
 		File file = new File(path).getParentFile();
 		file = new File(file.getPath() + File.separator + filename);
 		if (!file.exists())
-			throw new NotFoundException("file not found: " + filename);
+			throw new IllegalArgumentException("file not found: " + filename);
 		return file;
 	}
 
@@ -69,25 +67,6 @@ public class FileUtil
 				List<ErrorReport> errorReports = clientReport.getErrors();
 				if (!errorReports.isEmpty())
 				{
-					/*Collections.sort(errorReports, new Comparator<ErrorReport>()
-					{
-						@Override
-						public int compare(ErrorReport o1, ErrorReport o2)
-						{
-							if (o2 == null)
-								return 1;
-							if (o1 == null)
-								return -1;
-							if (o2.getTimestamp() == null)
-								return 1;
-							if (o1.getTimestamp() == null)
-								return -1;
-							if (o1.getTimestamp().longValue() > o2.getTimestamp().longValue())
-								return 1;
-							else
-								return -1;
-						}
-					});*/
 					String errorContent = ReportBuilder.buildError(clientReport.getIdentifier(), errorReports);
 					pw.println(errorContent);
 				}

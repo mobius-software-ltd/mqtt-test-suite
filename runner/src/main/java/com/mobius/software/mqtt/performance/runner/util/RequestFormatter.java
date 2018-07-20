@@ -26,25 +26,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.ws.rs.BadRequestException;
+import org.apache.commons.io.FileUtils;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mobius.software.mqtt.performance.api.data.ClientController;
-import com.mobius.software.mqtt.performance.api.data.Scenario;
-import com.mobius.software.mqtt.performance.api.data.ScenarioRequest;
 import com.mobius.software.mqtt.performance.api.json.MultiScenarioData;
+import com.mobius.software.mqtt.performance.commons.data.ClientController;
+import com.mobius.software.mqtt.performance.commons.data.Scenario;
+import com.mobius.software.mqtt.performance.commons.data.ScenarioRequest;
 import com.mobius.software.mqtt.performance.commons.util.URLBuilder;
 
 public class RequestFormatter
 {
-	public static List<ScenarioRequest> parseScenarioRequests(File json) throws JsonParseException, JsonMappingException, IOException
+	public static List<ScenarioRequest> parseScenarioRequests(File file) throws JsonParseException, JsonMappingException, IOException
+	{
+		return parseScenarioRequests(FileUtils.readFileToString(file, "UTF-8"));
+	}
+
+	public static List<ScenarioRequest> parseScenarioRequests(String json) throws JsonParseException, JsonMappingException, IOException
 	{
 		ObjectMapper mapper = new ObjectMapper();
 		MultiScenarioData multiScenarioData = mapper.readValue(json, MultiScenarioData.class);
 		if (!multiScenarioData.validate())
-			throw new BadRequestException("JSON file: one of the required fields is missing or invalid");
+			throw new IllegalArgumentException("JSON file: one of the required fields is missing or invalid");
 
 		List<ScenarioRequest> requests = new ArrayList<>();
 		List<ClientController> controllers = multiScenarioData.getControllers();

@@ -37,4 +37,8 @@ public interface NetworkHandler
 	void close(SocketAddress address);
 
 	void init(SocketAddress serverAddress);
+	
+	void shutdown() throws InterruptedException;
+	
+	void releaseLocalPort(SocketAddress serverAddress, int localPort);
 }

@@ -20,12 +20,11 @@
 
 package com.mobius.software.mqtt.performance.controller;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -36,24 +35,30 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.mobius.software.mqtt.performance.api.data.Repeat;
-import com.mobius.software.mqtt.performance.api.data.Scenario;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.api.json.ResponseData;
 import com.mobius.software.mqtt.performance.api.json.UniqueIdentifierRequest;
 import com.mobius.software.mqtt.performance.commons.data.Command;
+import com.mobius.software.mqtt.performance.commons.data.Repeat;
+import com.mobius.software.mqtt.performance.commons.data.Scenario;
 import com.mobius.software.mqtt.performance.commons.util.CommandParser;
 import com.mobius.software.mqtt.performance.commons.util.IdentifierParser;
 import com.mobius.software.mqtt.performance.controller.client.Client;
+import com.mobius.software.mqtt.performance.controller.net.MqClient;
 import com.mobius.software.mqtt.performance.controller.net.NetworkHandler;
-import com.mobius.software.mqtt.performance.controller.net.TCPClient;
+import com.mobius.software.mqtt.performance.controller.net.WsClient;
 import com.mobius.software.mqtt.performance.controller.task.TimedTask;
 
 @Path("controller")
 @Singleton
 public class Controller
 {
+	private static final Log logger = LogFactory.getLog(Controller.class);
+
 	private static final long TERMINATION_TIMEOUT = 1000;
 
 	private List<Worker> workers = new ArrayList<>();
@@ -63,38 +68,40 @@ public class Controller
 	private LinkedBlockingQueue<TimedTask> mainQueue = new LinkedBlockingQueue<>();
 	private IdentifierStorage identifierStorage = new IdentifierStorage();
 	private ConcurrentHashMap<UUID, Orchestrator> scenarioMap = new ConcurrentHashMap<>();
-	private NetworkHandler listener = new TCPClient();
-	private Config config;
+	private NetworkHandler mqttHandler = new MqClient();
+	private NetworkHandler wsHandler = new WsClient();
 
-	public Controller() throws IOException
+	public Controller() throws Exception
 	{
-		String path = "";
-		try
-		{
-			path = Controller.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-		}
-		catch (Exception ex)
-		{
+		start();
+	}
 
-		}
+	public void start() throws Exception
+	{
+		initConfig();
+		initTaskExecutor();
+	}
 
-		File file = new File(path).getParentFile();
-		file = new File(file.getPath() + "/" + ControllerRunner.configFile);
-		byte[] encoded = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
-		String value = new String(encoded, "UTF-8");
-		String[] args = value.split("\\r?\\n");
-		this.config = Config.parse(args);
+	private Config initConfig() throws IOException
+	{
+		Properties properties = new Properties();
+		properties.load(new FileInputStream(ControllerRunner.configFile));
+		return Config.parse(properties);
+	}
 
-		scheduler = new PeriodicQueuedTasks<TimedTask>(config.getTimersInterval(), mainQueue);
-		workersExecutor = Executors.newFixedThreadPool(config.getWorkers());
-		for (int i = 0; i < config.getWorkers(); i++)
+	private void initTaskExecutor()
+	{
+		scheduler = new PeriodicQueuedTasks<TimedTask>(Config.getInstance().getTimersInterval(), mainQueue);
+		workersExecutor = Executors.newFixedThreadPool(Config.getInstance().getWorkers());
+		for (int i = 0; i < Config.getInstance().getWorkers(); i++)
 		{
 			Worker worker = new Worker(scheduler, mainQueue);
 			workers.add(worker);
 			workersExecutor.submit(worker);
 		}
 		timersExecutor = Executors.newScheduledThreadPool(2);
-		timersExecutor.scheduleAtFixedRate(new PeriodicTasksRunner(scheduler), 0, config.getTimersInterval(), TimeUnit.MILLISECONDS);
+		timersExecutor.scheduleAtFixedRate(new PeriodicTasksRunner(scheduler), 0, Config.getInstance().getTimersInterval(), TimeUnit.MILLISECONDS);
+
 	}
 
 	@POST
@@ -103,16 +110,27 @@ public class Controller
 	@Consumes(MediaType.APPLICATION_JSON)
 	public GenericJsonRequest scenario(Scenario json)
 	{
-		if (!json.validate())
+		if (json == null || !json.validate())
 			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INVALID_PARAMETERS);
 
 		try
 		{
 			List<Client> clientList = new ArrayList<>();
-			OrchestratorProperties properties = OrchestratorProperties.fromScenarioProperties(json.getId(), json.getProperties(), json.getThreshold(), json.getStartThreshold(), json.getContinueOnError(), config.getInitialDelay());
+			OrchestratorProperties properties = OrchestratorProperties.fromScenarioProperties(json.getId(), json.getProperties(), json.getThreshold(), json.getStartThreshold(), json.getContinueOnError(), Config.getInstance().getInitialDelay(), json.getIsWs());
 			Orchestrator orchestrator = new Orchestrator(properties, scheduler, clientList);
 			String username = CommandParser.retrieveUsername(json.getCommands());
-			listener.init(orchestrator.getProperties().getServerAddress());
+			NetworkHandler handler = null;
+			if (!properties.isWs())
+			{
+				mqttHandler.init(orchestrator.getProperties().getServerAddress());
+				handler = mqttHandler;
+			}
+			else
+			{
+				wsHandler.init(orchestrator.getProperties().getWsServerAddress());
+				handler = wsHandler;
+			}
+
 			Repeat repeat = json.getProperties().getRepeat();
 			for (int i = 0; i < json.getCount(); i++)
 			{
@@ -130,7 +148,7 @@ public class Controller
 					repeatInterval = repeat.getInterval();
 				}
 				ConcurrentLinkedQueue<Command> commands = CommandParser.retrieveCommands(json.getCommands(), repeatCount, repeatInterval);
-				Client client = new Client(clientID, orchestrator, listener, commands);
+				Client client = new Client(clientID, orchestrator, handler, commands);
 				clientList.add(client);
 			}
 			orchestrator.start();
@@ -139,6 +157,7 @@ public class Controller
 		}
 		catch (Exception e)
 		{
+			logger.error(e.getMessage(), e);
 			return new GenericJsonRequest(ResponseData.ERROR, ResponseData.INTERNAL_SERVER_ERROR + e.getMessage());
 		}
 	}
@@ -186,6 +205,7 @@ public class Controller
 	{
 		for (Worker worker : workers)
 			worker.terminate();
+
 		if (mayInterrupt)
 			workersExecutor.shutdownNow();
 		else
@@ -203,7 +223,22 @@ public class Controller
 		}
 		catch (InterruptedException e)
 		{
+		}
 
+		try
+		{
+			mqttHandler.shutdown();
+		}
+		catch (Exception e)
+		{
+		}
+
+		try
+		{
+			wsHandler.shutdown();
+		}
+		catch (Exception e)
+		{
 		}
 	}
 }

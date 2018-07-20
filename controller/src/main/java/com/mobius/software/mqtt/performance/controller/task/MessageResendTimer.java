@@ -23,7 +23,7 @@ package com.mobius.software.mqtt.performance.controller.task;
 import com.mobius.software.mqtt.parser.avps.MessageType;
 import com.mobius.software.mqtt.parser.header.api.MQMessage;
 import com.mobius.software.mqtt.parser.header.impl.Publish;
-import com.mobius.software.mqtt.performance.api.data.ErrorType;
+import com.mobius.software.mqtt.performance.commons.data.ErrorType;
 import com.mobius.software.mqtt.performance.controller.PeriodicQueuedTasks;
 import com.mobius.software.mqtt.performance.controller.client.ConnectionContext;
 import com.mobius.software.mqtt.performance.controller.client.IdentityReport;

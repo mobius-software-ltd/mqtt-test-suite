@@ -1,0 +1,162 @@
+{
+	"controllers": [
+		{
+			"hostname": "{controller.1.ip}",
+			"port": "{controller.1.port}",
+			"identifierRegex": "%server%identity%",
+			"startIdentifier": 1,
+			"requests": [
+				{
+					"requestTimeout": 25000,
+					"scenario": {
+						"id": null,
+						"properties": {
+							"serverHostname": "{mqtt.lb.ip}",
+							"serverPort": "{mqtt.lb.port}",
+							"wsServerPort": "{mqtt.ws.port}",
+							"resendInterval": 3000,
+							"identifierRegex": "%server%identity%",
+							"startIdentifier": 1,
+							"scenarioDelay": 0,
+							"minPingInterval": 5000
+						},
+						"count": 1000,
+						"threshold": 1000,
+						"startThreshold": 500,
+						"continueOnError": true,
+						"isWs": true,
+						"commands": [
+							{
+								"type": "CONNECT",
+								"sendTime": 0,
+								"commandProperties": [
+									{
+										"type": "USERNAME",
+										"value": "first@foo.bar"
+									},
+									{
+										"type": "PASSWORD",
+										"value": "hash"
+									},
+									{
+										"type": "CLEAN_SESSION",
+										"value": "true"
+									},
+									{
+										"type": "KEEPALIVE",
+										"value": "30"
+									}
+								]
+							},
+							{
+								"type": "SUBSCRIBE",
+								"sendTime": 1000,
+								"commandProperties": [
+									{
+										"type": "TOPIC",
+										"value": "performance/test"
+									},
+									{
+										"type": "QOS",
+										"value": "1"
+									}
+								]
+							},
+							{
+								"type": "UNSUBSCRIBE",
+								"sendTime": 20000,
+								"commandProperties": [
+									{
+										"type": "TOPIC",
+										"value": "performance/test"
+									}
+								]
+							},
+							{
+								"type": "DISCONNECT",
+								"sendTime": 1000,
+								"commandProperties": null
+							}
+						]
+					}
+				},
+				{
+					"requestTimeout": 25000,
+					"scenario": {
+						"id": null,
+						"properties": {
+							"serverHostname": "{mqtt.lb.ip}",
+							"serverPort": "{mqtt.lb.port}",
+							"wsServerPort": "{mqtt.ws.port}",
+							"resendInterval": 3000,
+							"identifierRegex": "%identity%server%",
+							"startIdentifier": 1000,
+							"scenarioDelay": 1000,
+							"minPingInterval": 5000
+						},
+						"count": 1,
+						"threshold": 1000,
+						"startThreshold": 500,
+						"continueOnError": true,
+						"isWs": true,
+						"commands": [
+							{
+								"type": "CONNECT",
+								"sendTime": 0,
+								"commandProperties": [
+									{
+										"type": "USERNAME",
+										"value": "first@foo.bar"
+									},
+									{
+										"type": "PASSWORD",
+										"value": "hash"
+									},
+									{
+										"type": "CLEAN_SESSION",
+										"value": "true"
+									},
+									{
+										"type": "KEEPALIVE",
+										"value": "30"
+									}
+								]
+							},
+							{
+								"type": "PUBLISH",
+								"sendTime": 3000,
+								"commandProperties": [
+									{
+										"type": "TOPIC",
+										"value": "performance/test"
+									},
+									{
+										"type": "QOS",
+										"value": "1"
+									},
+									{
+										"type": "COUNT",
+										"value": "5"
+									},
+									{
+										"type": "RESEND_TIME",
+										"value": 1000
+									},
+									{
+										"type": "MESSAGE_SIZE",
+										"value": 20
+									}
+								]
+							},
+							{
+								"type": "DISCONNECT",
+								"sendTime": 1000,
+								"commandProperties": null
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

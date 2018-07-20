@@ -1,0 +1,62 @@
+{
+	"controllers": [
+		{
+			"hostname": "{controller.1.ip}",
+			"port": "{controller.1.port}",
+			"identifierRegex": "%server%identity%",
+			"startIdentifier": 1,
+			"requests": [
+				{
+					"requestTimeout": 120000,
+					"scenario": {
+						"id": null,
+						"properties": {
+							"serverHostname": "{mqtt.lb.ip}",
+							"serverPort": "{mqtt.lb.port}",
+							"wsServerPort": "{mqtt.ws.port}",
+							"resendInterval": 3000,
+							"identifierRegex": "%server%identity%",
+							"startIdentifier": 1,
+							"scenarioDelay": 0,
+							"minPingInterval": 5000
+						},
+						"count": 33334,
+						"threshold": 1000,
+						"startThreshold": 500,
+						"continueOnError": true,
+						"isWs": true,
+						"commands": [
+							{
+								"type": "CONNECT",
+								"sendTime": 0,
+								"commandProperties": [
+									{
+										"type": "USERNAME",
+										"value": "first@foo.bar"
+									},
+									{
+										"type": "PASSWORD",
+										"value": "hash"
+									},
+									{
+										"type": "CLEAN_SESSION",
+										"value": "true"
+									},
+									{
+										"type": "KEEPALIVE",
+										"value": "30"
+									}
+								]
+							},
+							{
+								"type": "DISCONNECT",
+								"sendTime": 45000,
+								"commandProperties": null
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

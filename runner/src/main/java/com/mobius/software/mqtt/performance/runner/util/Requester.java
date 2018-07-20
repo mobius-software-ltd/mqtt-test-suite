@@ -22,11 +22,11 @@ package com.mobius.software.mqtt.performance.runner.util;
 
 import java.util.UUID;
 
-import com.mobius.software.mqtt.performance.api.data.Scenario;
 import com.mobius.software.mqtt.performance.api.json.GenericJsonRequest;
 import com.mobius.software.mqtt.performance.api.json.ReportResponse;
 import com.mobius.software.mqtt.performance.api.json.UniqueIdentifierRequest;
 import com.mobius.software.mqtt.performance.commons.data.PathSegment;
+import com.mobius.software.mqtt.performance.commons.data.Scenario;
 import com.mobius.software.mqtt.performance.commons.util.URLBuilder;
 import com.mobius.software.mqtt.performance.runner.JSONContainer;
 
@@ -40,6 +40,11 @@ public class Requester
 		try
 		{
 			response = container.post(request);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			throw e;
 		}
 		finally
 		{

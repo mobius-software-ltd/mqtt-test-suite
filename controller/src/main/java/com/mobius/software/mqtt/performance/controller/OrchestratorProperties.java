@@ -23,7 +23,7 @@ package com.mobius.software.mqtt.performance.controller;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
-import com.mobius.software.mqtt.performance.api.data.ScenarioProperties;
+import com.mobius.software.mqtt.performance.commons.data.ScenarioProperties;
 
 public class OrchestratorProperties
 {
@@ -31,6 +31,7 @@ public class OrchestratorProperties
 	private String serverHostname;
 	private int scenarioDelay;
 	private int serverPort;
+	private int wsServerPort;
 	private int threashold;
 	private int startThreashold;
 	private long resendInterval;
@@ -39,15 +40,18 @@ public class OrchestratorProperties
 	private int initialDelay;
 	private String identifierRegex;
 	private int startIdentifier;
+	private boolean isWs;
 
 	private InetSocketAddress serverAddress;
+	private InetSocketAddress wsServerAddress;
 
-	private OrchestratorProperties(UUID scenarioID, String serverHostname, int serverPort, int scenarioDelay, int threashold, int startThreashold, long resendInterval, long minPingInterval, boolean continueOnError, int initialDelay, String identifierRegex, int startIdentifier, InetSocketAddress serverAddress)
+	private OrchestratorProperties(UUID scenarioID, String serverHostname, int serverPort, int wsServerPort, int scenarioDelay, int threashold, int startThreashold, long resendInterval, long minPingInterval, boolean continueOnError, int initialDelay, String identifierRegex, int startIdentifier, InetSocketAddress serverAddress, InetSocketAddress wsServerAddress, boolean isWs)
 	{
 		this.scenarioID = scenarioID;
 		this.serverHostname = serverHostname;
 		this.scenarioDelay = scenarioDelay;
 		this.serverPort = serverPort;
+		this.wsServerPort = wsServerPort;
 		this.threashold = threashold;
 		this.startThreashold = startThreashold;
 		this.resendInterval = resendInterval;
@@ -57,12 +61,15 @@ public class OrchestratorProperties
 		this.identifierRegex = identifierRegex;
 		this.startIdentifier = startIdentifier;
 		this.serverAddress = serverAddress;
+		this.wsServerAddress = wsServerAddress;
+		this.isWs = isWs;
 	}
 
-	public static OrchestratorProperties fromScenarioProperties(UUID scenarioID, ScenarioProperties properties, Integer threashold, Integer startThreashold, boolean continueOnError, Integer initialDelay)
+	public static OrchestratorProperties fromScenarioProperties(UUID scenarioID, ScenarioProperties properties, Integer threashold, Integer startThreashold, boolean continueOnError, Integer initialDelay, boolean isWs)
 	{
 		InetSocketAddress serverAddress = new InetSocketAddress(properties.getServerHostname(), properties.getServerPort());
-		return new OrchestratorProperties(scenarioID, properties.getServerHostname(), properties.getServerPort(), properties.getScenarioDelay(), threashold, startThreashold, properties.getResendInterval(), properties.getMinPingInterval(), continueOnError, initialDelay, properties.getIdentifierRegex(), properties.getStartIdentifier(), serverAddress);
+		InetSocketAddress wsServerAddress = new InetSocketAddress(properties.getServerHostname(), properties.getWsServerPort());
+		return new OrchestratorProperties(scenarioID, properties.getServerHostname(), properties.getServerPort(), properties.getWsServerPort(), properties.getScenarioDelay(), threashold, startThreashold, properties.getResendInterval(), properties.getMinPingInterval(), continueOnError, initialDelay, properties.getIdentifierRegex(), properties.getStartIdentifier(), serverAddress, wsServerAddress, isWs);
 	}
 
 	public UUID getScenarioID()
@@ -128,5 +135,30 @@ public class OrchestratorProperties
 	public InetSocketAddress getServerAddress()
 	{
 		return serverAddress;
+	}
+
+	public boolean isWs()
+	{
+		return isWs;
+	}
+
+	public void setWs(boolean isWs)
+	{
+		this.isWs = isWs;
+	}
+
+	public int getWsServerPort()
+	{
+		return wsServerPort;
+	}
+
+	public void setWsServerPort(int wsServerPort)
+	{
+		this.wsServerPort = wsServerPort;
+	}
+
+	public InetSocketAddress getWsServerAddress()
+	{
+		return wsServerAddress;
 	}
 }
